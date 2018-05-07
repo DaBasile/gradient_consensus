@@ -1,5 +1,18 @@
 from random import randint
+
+import networkx as nx
 import numpy as np
+
+
+def createAdjM(d):
+    G = nx.Graph()
+    for i in range(0, d):
+        G.add_node(i)
+
+    print(G.number_of_nodes())
+    Adj = nx.adjacency_matrix(G)
+
+    return Adj
 
 
 def createR(d):
@@ -36,6 +49,8 @@ if __name__ == '__main__':
 
     y = createR(5)
 
+    z = createAdjM(3)
+
     print(x)
     print(y)
-
+    #print(z.todense())
