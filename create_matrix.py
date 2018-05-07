@@ -9,7 +9,9 @@ def createAdjM(d):
     for i in range(0, d):
         G.add_node(i)
 
-    print(G.number_of_nodes())
+    for i in range(0, d):
+        G.add_edge(i, i+1)
+
     Adj = nx.adjacency_matrix(G)
 
     return Adj
@@ -19,6 +21,7 @@ def createR(d):
     r = np.zeros(d)
     for x in range(0, d):
         r[x] = randint(0, 1)
+
     return r
 
 
@@ -27,6 +30,9 @@ def createQ(d):
     A = np.zeros((d, d))
     eye = np.identity(d)
     for x in range(0, d):
+ [4. 3. 0. 2. 7.]]
+[1. 0. 0. 0. 0.]
+[[0 1 0 0]
         for y in range(0, d):
             Adj[x][y] = randint(0, 2)
             if x == y:
@@ -53,4 +59,4 @@ if __name__ == '__main__':
 
     print(x)
     print(y)
-    #print(z.todense())
+    print(z.todense())
