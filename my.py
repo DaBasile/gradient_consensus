@@ -15,14 +15,13 @@ rank = world.Get_rank()
 name = MPI.Get_processor_name()
 """ Define initial value of our test variable """
 max_iterations = 50
-d = 2.0
+d = 2
 alpha = 0.001
 matrix = cm.createAdjM(world_size)
 
 
 def send_data(data):
 
-    print(data)
     for destination in matrix.successors(rank):
         # BLOCCANTE
         world.send(data, dest=destination)
@@ -74,32 +73,31 @@ def trova_media(iterazioni):
 
 
 def calculate_consensus(x_0, data_q, data_r):
-    x_x = np.zeros((max_iterations+1, (d,)*2))
-    x_x[:][:][0] = x_0
-    print("rank =  ", rank, "\tx_o =  ", x_x[:][0][0], "\tdataq =  ", data_q, "\tdatar =  ", data_r)
+    x_x = [x_0]
     sincronizza()
+
     for i in range(0, max_iterations):
         tmp = 0
         sincronizza()
 
         for j in range(0, world_size):
-            send_data(x_x[:][i])
+            send_data(x_x[:][0])
             data = get_data()
-            u_i = np.zeros((1, d))
-            print(u_i)
+            u_i = np.zeros((d, 1))
 
             for h in range(0, world_size):
-                u_i = np.add(u_i, data[:])
+                u_i = np.sum([u_i, data], axis=0)
 
-            #print("rank = \t", rank, "\t gradient = \t", cf.gradientF(x_x[:][i], data_q, data_r))
-
+            # print(np.dot(alpha, cf.gradientF(x_x[:][i], data_q, data_r)))
             u_i = np.subtract(u_i, np.dot(alpha, cf.gradientF(x_x[:][i], data_q, data_r)))
-            x_x[:][i+1] = u_i
+
+            # print("time ", i, "\tvalue =  ", u_i)
+            x_x.append(u_i)
             tmp = tmp + cf.quadraticF(x_x[:][i], data_q, data_r)
             sincronizza()
 
-            if rank == 0:
-                print(x_x[:][i+1])
+            #if rank == 0:
+             #   print(x_x[:][i+1])
 
         sincronizza()
 
@@ -111,17 +109,15 @@ if __name__ == '__main__':
     for i in range(0, world_size):
         if i == rank:
             x_0 = np.array([[i], [i+1]])
-            data_q = cm.createQ(1)
-            data_r = cm.createR(1)
+            data_q = cm.createQ(d)
+            data_r = cm.createR(d)
 
     if rank == 0:
         print("\n\n\t\tinizio test...\n")
+
     sincronizza()
     calculate_consensus(x_0, data_q, data_r)
     sincronizza()
+
     if rank == 0:
         print("\n\n\t\tfine test...\n")
-
-
-
-
