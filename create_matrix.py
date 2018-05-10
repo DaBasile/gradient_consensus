@@ -18,7 +18,7 @@ def createAdjM(world_d):
 
 
 def createR(d):
-    r = np.zeros(d)
+    r = np.zeros((d, 1))
     for i in range(0, d):
         r[i] = randint(0, 1)
     return r
