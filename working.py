@@ -4,13 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def quadraticF(x, _Q, _r):
-    f = 1 / 2 * np.dot(np.dot(np.transpose(x), _Q), x) + np.dot(np.transpose(_r), x)
+def quadraticF(x, Q, r):
+    f = 1 / 2 * np.dot(np.dot(np.transpose(x), Q), x) + np.dot(np.transpose(r), x)
     return f
 
 
-def gradientF(x, _Q, _r):
-    df = 1 / 2 * np.dot(np.transpose(_Q), x) + 1 / 2 * np.dot(_Q, x) + _r
+def gradientF(x, Q, r):
+    df = np.dot(np.transpose(Q) + Q, x) + np.transpose(r)
     return df
 
 
