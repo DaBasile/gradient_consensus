@@ -4,17 +4,17 @@ import networkx as nx
 import numpy as np
 
 
-def createAdjM(d):
+def createAdjM(world_d):
     g = nx.DiGraph()
-    for i in range(0, d):
+    for i in range(0, world_d):
         g.add_node(i)
-    for j in range(0, d):
-        if j == d-1:
+    for j in range(0, world_d):
+        if j == world_d-1:
             g.add_edge(j, 0)
         else:
             g.add_edge(j, j + 1)
     adj = nx.adjacency_matrix(g)
-    return adj
+    return g
 
 
 def createR(d):
