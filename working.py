@@ -115,9 +115,13 @@ print(XX[len(XX)-3])
 
 if rank == 0:
     # TODO Dovremmo plottare la somma delle perdite!
+    plt.ion()
+    plt.show()
     plt.plot(range(0, MAX_ITERATIONS-3), losses[0:MAX_ITERATIONS-3])
     plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
-    plt.show()
+    plt.draw()
+    plt.pause(.001)
+
 
 if rank == 0:
     to_find = [
@@ -138,3 +142,4 @@ if rank == 0:
         _tmp = np.divide(_tmp, _tot_exp)
         _predicted = np.argmax(_tmp)
         print('Predicted: ', _predicted, ', real: ', _set[4])
+    input("Press [enter] to continue.")
