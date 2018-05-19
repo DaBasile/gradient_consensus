@@ -61,14 +61,16 @@ MAX_ITERATIONS = 10000
 dimensions = [4, 4]
 epsilon = 0.000001
 
-# Assign dataset to each agent
+# Assign dataset to each agent
 dataset_portion = len(dataset) / agents_number
-start_dataset = rank
-end_dataset = rank+1 * dataset_portion
+start_dataset = rank * dataset_portion
+end_dataset = (rank  * dataset_portion) + dataset_portion
+start_dataset = int(start_dataset)
 end_dataset = int(end_dataset)
-if (end_dataset >= len(dataset)):
-    end_dataset = len(dataset) + 1
+# if (end_dataset >= len(dataset)):
+    # end_dataset = len(dataset) + 1
 personal_dataset = dataset[start_dataset:end_dataset]
+print(personal_dataset)
 # TODO il dataset va sistemato per prendere tutti le rows nel caso di num agenti non divisibile per 30
 
 print("agent ", rank, " got ", len(personal_dataset), " rows of dataset")
@@ -116,7 +118,7 @@ for tt in range(1, MAX_ITERATIONS-1):
     # synchronise
     world.Barrier()
 
-print(XX[len(XX)-3])
+#print(XX[len(XX)-3])
 
 if rank != 0:
     world.send(losses, dest=0)
@@ -151,7 +153,7 @@ if rank == 0:
             _tot_exp = _tot_exp + val
         _tmp = np.divide(_tmp, _tot_exp)
         _predicted = np.argmax(_tmp)
-        print('Predicted: ', _predicted, ', real: ', _set[4])
+        #print('Predicted: ', _predicted, ', real: ', _set[4])
         if _predicted != _set[4]:
             wrong_answers = wrong_answers + 1
 
