@@ -4,16 +4,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+CONSTANT_TO_SUBTRACT = 15
+
+
 def loss(all_theta, category_count):
     # _index = 0
     the_sum = 0
     for index in range(0, len(personal_dataset)):
         denominator = 0
         for theta in all_theta:
-            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][0:4]))
+            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][0:4]) - CONSTANT_TO_SUBTRACT)
         for category in range(0, category_count):
             if category == personal_dataset[index][4]:
-                _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]))
+                _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
                 _log = np.log(np.divide(_exp, denominator))
                 the_sum = the_sum - _log
     return the_sum
@@ -24,12 +27,12 @@ def gradientF(all_theta, category_count):
     for index in range(0, len(personal_dataset)):
         denominator = 0
         for theta in all_theta:
-            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][:4]))
+            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
         for category in range(0, category_count):
             coeff = 0
             if category == personal_dataset[index][4]:
                 coeff = 1
-            _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]))
+            _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
             coeff = coeff - np.divide(_exp, denominator)
             thetas[category] = thetas[category] - np.multiply(personal_dataset[index][:4], coeff)
     return thetas
