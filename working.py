@@ -141,7 +141,7 @@ if rank == 0:
 if rank == 0:
     to_find = np.loadtxt('iris_training_complete.txt', delimiter=';', dtype=float)
     #to_find = normalize_dataset(to_find)
-
+    wrong_answers = 0
     for _set in to_find:
         _tot_exp = 0
         _tmp = np.zeros(4)
@@ -152,4 +152,8 @@ if rank == 0:
         _tmp = np.divide(_tmp, _tot_exp)
         _predicted = np.argmax(_tmp)
         print('Predicted: ', _predicted, ', real: ', _set[4])
+        if _predicted != _set[4]:
+            wrong_answers = wrong_answers + 1
+
+    print("Wrong predicted values: ", wrong_answers, "/", len(to_find))
     input("Press [enter] to continue.")
