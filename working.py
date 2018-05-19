@@ -4,15 +4,44 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def quadraticF(x, Q, r):
-    f = 1 / 2 * np.dot(np.dot(np.transpose(x), Q), x) + np.dot(np.transpose(r), x)
-    return f
+def loss(all_theta, category_count):
+    # _index = 0
+    the_sum = 0
+    for index in range(0, len(personal_dataset)):
+        denominator = 0
+        for theta in all_theta:
+            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][0:4]))
+        for category in range(0, category_count):
+            if category == personal_dataset[index][4]:
+                _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]))
+                _log = np.log(np.divide(_exp, denominator))
+                the_sum = the_sum - _log
+    return the_sum
 
 
-def gradientF(x, Q, r):
-    df = np.dot(np.transpose(Q) + Q, x) + np.transpose(r)
-    return df
+def gradientF(all_theta, category_count):
+    thetas = np.zeros(dimensions)
+    for index in range(0, len(personal_dataset)):
+        denominator = 0
+        for theta in all_theta:
+            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][:4]))
+        for category in range(0, category_count):
+            coeff = 0
+            if category == personal_dataset[index][4]:
+                coeff = 1
+            _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]))
+            coeff = coeff - np.divide(_exp, denominator)
+            thetas[category] = thetas[category] - np.multiply(personal_dataset[index][:4], coeff)
+    return thetas
 
+
+# --oversubscribe -n 6
+dataset = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
+# for row in dataset:
+#     to_scale = row[:4]
+#     _max = max(to_scale)
+#     _min = min(to_scale)
+#     row[:4] = np.divide(np.subtract(to_scale, _min), np.subtract(_max, _min))
 
 """ Define world parameter, these have been got from mpi system """
 world = MPI.COMM_WORLD
@@ -20,71 +49,92 @@ agents_number = world.Get_size()
 rank = world.Get_rank()
 
 """ Define variables """
-MAX_ITERATIONS = 10000
-dimensions = 4
+MAX_ITERATIONS = 1000
+dimensions = [4, 4]
 epsilon = 0.000001
-alpha = 0.0001
+
+# Assign dataset to each agent
+dataset_portion = len(dataset) / agents_number
+start_dataset = rank
+end_dataset = rank+1 * dataset_portion
+end_dataset = int(end_dataset)
+if (end_dataset >= len(dataset)):
+    end_dataset = len(dataset) + 1
+personal_dataset = dataset[start_dataset:end_dataset]
+# TODO il dataset va sistemato per prendere tutti le rows nel caso di num agenti non divisibile per 30
+
+print("agent ", rank, " got ", len(personal_dataset), " rows of dataset")
 
 adj = cm.createAdjM(agents_number)
-Q = cm.createQ(dimensions)
-r = cm.createR(dimensions)
-x0 = [5 for j in range(0, dimensions)]
 
-XX = np.zeros([MAX_ITERATIONS, dimensions])
+x0 = np.ones(dimensions)
+
+XX = np.zeros([MAX_ITERATIONS, *dimensions])
+losses = np.zeros(MAX_ITERATIONS)
 XX[0] = x0
 
 num_of_neighbors = 0
 for in_neighbors in adj.predecessors(rank):
-    num_of_neighbors = num_of_neighbors + 1
+    if in_neighbors != 0:
+        num_of_neighbors = num_of_neighbors + 1
 weight = 1 / (num_of_neighbors + 1)  # 1 is for self-loop
 
 world.Barrier()
 
-tmp = []
-
 for tt in range(1, MAX_ITERATIONS-1):
 
-    # Local variable to store current state
-    u_i = np.zeros(dimensions)
+    alpha = 0.01 * (1 / tt)**0.7
+
+    # Update with my previous state
+    u_i = np.multiply(XX[tt-1], weight)
 
     # Send the state to neighbors
     for node in adj.successors(rank):
-        world.send(XX[tt], dest=node)
+        if node != rank:
+            world.send(XX[tt-1], dest=node)
 
     # Update with state of all nodes before me
     for node in adj.predecessors(rank):
-        u_i = u_i + world.recv(source=node) * weight
-
-    # Update with my previous state
-    u_i = u_i + XX[tt] * weight
+        if node != rank:
+            u_i = u_i + world.recv(source=node) * weight
 
     # Go in the opposite direction with respect to the gradient
-    u_i = u_i - alpha * gradientF(XX[tt], Q, r)
-    # Store  my new state
-    XX[tt+1] = u_i
+    grad = np.multiply(alpha, gradientF(XX[tt-1], 4))
 
-    tmp.append(quadraticF(XX[tt], Q, r))
+    for i in range(0, dimensions[0]):
+        u_i[i] = np.subtract(u_i[i], grad[i])
+    # Store  my new state
+    XX[tt] = u_i
+
+    losses[tt] = loss(XX[tt], 4)
 
     # synchronise
     world.Barrier()
 
-print(XX[len(XX)-1])
-
-if rank != 0:
-    world.send(tmp, dest=0)
-
-_sum = np.zeros(MAX_ITERATIONS)
-if rank == 0:
-    function_values = [tmp]
-
-    for agent in range(1, agents_number):
-        function_values.append(world.recv(source=agent))
-
-    for agent in range(0, agents_number - 1):
-        for t in range(0, MAX_ITERATIONS-2):
-            _sum[t] = _sum[t] + function_values[agent][t]
+print(XX[len(XX)-3])
 
 if rank == 0:
-    plt.plot(range(0, MAX_ITERATIONS-3), _sum[0:MAX_ITERATIONS-3])
+    # TODO Dovremmo plottare la somma delle perdite!
+    plt.plot(range(0, MAX_ITERATIONS-3), losses[0:MAX_ITERATIONS-3])
     plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
     plt.show()
+
+if rank == 0:
+    to_find = [
+        [5.4, 3.9, 1.7, 0.4, 0],
+        [7.7, 3.8, 6.7, 2.2, 2],
+        [6.3, 3.3, 4.7, 1.6, 1],
+        [6.8, 3.2, 5.9, 2.3, 2],
+        [7.6, 3, 6.6, 2.1, 2]
+    ]
+
+    for _set in to_find:
+        _tot_exp = 0
+        _tmp = np.zeros(4)
+        for i in range(0, 4):
+            val = np.dot(XX[len(XX)-2][i], _set[0:4])
+            _tmp[i] = val
+            _tot_exp = _tot_exp + val
+        _tmp = np.divide(_tmp, _tot_exp)
+        _predicted = np.argmax(_tmp)
+        print('Predicted: ', _predicted, ', real: ', _set[4])
