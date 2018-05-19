@@ -139,13 +139,7 @@ if rank == 0:
 
 
 if rank == 0:
-    to_find = [
-        [5.4, 3.9, 1.7, 0.4, 0],
-        [7.7, 3.8, 6.7, 2.2, 2],
-        [6.3, 3.3, 4.7, 1.6, 1],
-        [6.8, 3.2, 5.9, 2.3, 2],
-        [7.6, 3, 6.6, 2.1, 2]
-    ]
+    to_find = np.loadtxt('iris_training_complete.txt', delimiter=';', dtype=float)
     #to_find = normalize_dataset(to_find)
 
     for _set in to_find:
