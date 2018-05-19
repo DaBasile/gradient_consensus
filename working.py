@@ -35,13 +35,18 @@ def gradientF(all_theta, category_count):
     return thetas
 
 
+def normalize_dataset(dataset):
+    for row in dataset:
+        to_scale = row[:4]
+        _max = max(to_scale)
+        _min = min(to_scale)
+        row[:4] = np.divide(np.subtract(to_scale, _min), np.subtract(_max, _min))
+    return dataset
+
+
 # --oversubscribe -n 6
 dataset = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
-# for row in dataset:
-#     to_scale = row[:4]
-#     _max = max(to_scale)
-#     _min = min(to_scale)
-#     row[:4] = np.divide(np.subtract(to_scale, _min), np.subtract(_max, _min))
+#dataset = normalize_dataset(dataset)
 
 """ Define world parameter, these have been got from mpi system """
 world = MPI.COMM_WORLD
@@ -49,7 +54,7 @@ agents_number = world.Get_size()
 rank = world.Get_rank()
 
 """ Define variables """
-MAX_ITERATIONS = 1000
+MAX_ITERATIONS = 10000
 dimensions = [4, 4]
 epsilon = 0.000001
 
@@ -75,28 +80,25 @@ XX[0] = x0
 
 num_of_neighbors = 0
 for in_neighbors in adj.predecessors(rank):
-    if in_neighbors != 0:
-        num_of_neighbors = num_of_neighbors + 1
+    num_of_neighbors = num_of_neighbors + 1
 weight = 1 / (num_of_neighbors + 1)  # 1 is for self-loop
 
 world.Barrier()
 
 for tt in range(1, MAX_ITERATIONS-1):
 
-    alpha = 0.01 * (1 / tt)**0.7
+    alpha = 0.01 * (1 / tt)**0.4
 
     # Update with my previous state
     u_i = np.multiply(XX[tt-1], weight)
 
     # Send the state to neighbors
     for node in adj.successors(rank):
-        if node != rank:
-            world.send(XX[tt-1], dest=node)
+        world.send(XX[tt-1], dest=node)
 
     # Update with state of all nodes before me
     for node in adj.predecessors(rank):
-        if node != rank:
-            u_i = u_i + world.recv(source=node) * weight
+        u_i = u_i + world.recv(source=node) * weight
 
     # Go in the opposite direction with respect to the gradient
     grad = np.multiply(alpha, gradientF(XX[tt-1], 4))
@@ -113,7 +115,17 @@ for tt in range(1, MAX_ITERATIONS-1):
 
 print(XX[len(XX)-3])
 
+if rank != 0:
+    world.send(losses, dest=0)
+
 if rank == 0:
+
+    # Take the losses from all the other agents and sum
+    # We now have the overall loss given from the cost function
+    for i in range(1, agents_number):
+        agent_loss = world.recv(source=i)
+        losses = np.add(losses, agent_loss)
+
     # TODO Dovremmo plottare la somma delle perdite!
     plt.ion()
     plt.show()
@@ -131,6 +143,7 @@ if rank == 0:
         [6.8, 3.2, 5.9, 2.3, 2],
         [7.6, 3, 6.6, 2.1, 2]
     ]
+    #to_find = normalize_dataset(to_find)
 
     for _set in to_find:
         _tot_exp = 0
