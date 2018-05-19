@@ -70,7 +70,7 @@ end_dataset = int(end_dataset)
 # if (end_dataset >= len(dataset)):
     # end_dataset = len(dataset) + 1
 personal_dataset = dataset[start_dataset:end_dataset]
-print(personal_dataset)
+#print(personal_dataset)
 # TODO il dataset va sistemato per prendere tutti le rows nel caso di num agenti non divisibile per 30
 
 print("agent ", rank, " got ", len(personal_dataset), " rows of dataset")
@@ -118,7 +118,7 @@ for tt in range(1, MAX_ITERATIONS-1):
     # synchronise
     world.Barrier()
 
-#print(XX[len(XX)-3])
+print(XX[len(XX)-3])
 
 if rank != 0:
     world.send(losses, dest=0)
