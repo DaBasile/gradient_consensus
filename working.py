@@ -48,7 +48,7 @@ def normalize_dataset(dataset):
 
 
 # --oversubscribe -n 6
-dataset = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
+dataset = np.loadtxt('iris_training_complete.txt', delimiter=';', dtype=float)
 #dataset = normalize_dataset(dataset)
 
 """ Define world parameter, these have been got from mpi system """
@@ -59,7 +59,7 @@ rank = world.Get_rank()
 """ Define variables """
 MAX_ITERATIONS = 10000
 dimensions = [4, 4]
-epsilon = 0.000001
+epsilon = 0.001
 
 # Assign dataset to each agent
 dataset_portion = len(dataset) / agents_number
@@ -67,11 +67,7 @@ start_dataset = rank * dataset_portion
 end_dataset = (rank  * dataset_portion) + dataset_portion
 start_dataset = int(start_dataset)
 end_dataset = int(end_dataset)
-# if (end_dataset >= len(dataset)):
-    # end_dataset = len(dataset) + 1
 personal_dataset = dataset[start_dataset:end_dataset]
-#print(personal_dataset)
-# TODO il dataset va sistemato per prendere tutti le rows nel caso di num agenti non divisibile per 30
 
 print("agent ", rank, " got ", len(personal_dataset), " rows of dataset")
 
@@ -92,7 +88,7 @@ world.Barrier()
 
 for tt in range(1, MAX_ITERATIONS-1):
 
-    alpha = 0.01 * (1 / tt)**0.4
+    alpha = 0.01 * (1 / tt)**0.1
 
     # Update with my previous state
     u_i = np.multiply(XX[tt-1], weight)
@@ -115,6 +111,10 @@ for tt in range(1, MAX_ITERATIONS-1):
 
     losses[tt] = loss(XX[tt], 4)
 
+    # if np.linalg.norm(np.subtract(XX[tt], XX[tt-1])) < epsilon:
+    #     print("Rank ", rank, " exit at iteration ", tt)
+    #     break
+
     # synchronise
     world.Barrier()
 
@@ -131,7 +131,7 @@ if rank == 0:
         agent_loss = world.recv(source=i)
         losses = np.add(losses, agent_loss)
 
-    # TODO Dovremmo plottare la somma delle perdite!
+    # Plot cost function
     plt.ion()
     plt.show()
     plt.plot(range(0, MAX_ITERATIONS-3), losses[0:MAX_ITERATIONS-3])
@@ -141,8 +141,8 @@ if rank == 0:
 
 
 if rank == 0:
-    to_find = np.loadtxt('iris_training_complete.txt', delimiter=';', dtype=float)
-    #to_find = normalize_dataset(to_find)
+    to_find = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
+    # to_find = normalize_dataset(to_find)
     wrong_answers = 0
     for _set in to_find:
         _tot_exp = 0
@@ -153,7 +153,7 @@ if rank == 0:
             _tot_exp = _tot_exp + val
         _tmp = np.divide(_tmp, _tot_exp)
         _predicted = np.argmax(_tmp)
-        #print('Predicted: ', _predicted, ', real: ', _set[4])
+        # print('Predicted: ', _predicted, ', real: ', _set[4])
         if _predicted != _set[4]:
             wrong_answers = wrong_answers + 1
 
