@@ -3,7 +3,6 @@ import create_matrix as cm
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 CONSTANT_TO_SUBTRACT = 15
 
 
@@ -49,7 +48,7 @@ def normalize_dataset(dataset):
 
 # --oversubscribe -n 6
 dataset = np.loadtxt('iris_training_complete.txt', delimiter=';', dtype=float)
-#dataset = normalize_dataset(dataset)
+# dataset = normalize_dataset(dataset)
 
 """ Define world parameter, these have been got from mpi system """
 world = MPI.COMM_WORLD
@@ -64,7 +63,7 @@ epsilon = 0.001
 # Assign dataset to each agent
 dataset_portion = len(dataset) / agents_number
 start_dataset = rank * dataset_portion
-end_dataset = (rank  * dataset_portion) + dataset_portion
+end_dataset = (rank * dataset_portion) + dataset_portion
 start_dataset = int(start_dataset)
 end_dataset = int(end_dataset)
 personal_dataset = dataset[start_dataset:end_dataset]
@@ -86,23 +85,30 @@ weight = 1 / (num_of_neighbors + 1)  # 1 is for self-loop
 
 world.Barrier()
 
-for tt in range(1, MAX_ITERATIONS-1):
+# epsilon_reached = [False for i in range(agents_number)]
+epsilon_reached = False
+buff = False
 
-    alpha = 0.01 * (1 / tt)**0.1
+ITERATION_DONE = 0
+
+
+for tt in range(1, MAX_ITERATIONS - 1):
+
+    alpha = 0.01 * (1 / tt) ** 0.1
 
     # Update with my previous state
-    u_i = np.multiply(XX[tt-1], weight)
+    u_i = np.multiply(XX[tt - 1], weight)
 
     # Send the state to neighbors
     for node in adj.successors(rank):
-        world.send(XX[tt-1], dest=node)
+        world.send(XX[tt - 1], dest=node)
 
     # Update with state of all nodes before me
     for node in adj.predecessors(rank):
         u_i = u_i + world.recv(source=node) * weight
 
     # Go in the opposite direction with respect to the gradient
-    grad = np.multiply(alpha, gradientF(XX[tt-1], 4))
+    grad = np.multiply(alpha, gradientF(XX[tt - 1], 4))
 
     for i in range(0, dimensions[0]):
         u_i[i] = np.subtract(u_i[i], grad[i])
@@ -111,17 +117,40 @@ for tt in range(1, MAX_ITERATIONS-1):
 
     losses[tt] = loss(XX[tt], 4)
 
-    # if np.linalg.norm(np.subtract(XX[tt], XX[tt-1])) < epsilon:
-    #     print("Rank ", rank, " exit at iteration ", tt)
-    #     break
+    # Checking epsilon reached condition
+    if np.linalg.norm(np.subtract(XX[tt], XX[tt - 1])) < epsilon:
+        buff = True
 
-    # synchronise
-    world.Barrier()
+    # Rank 0 get all epsilon and check if all reached it
+    buffer = world.gather(buff, root=0)
 
-print(XX[len(XX)-3])
+    # If true it set epsilon reached
+    if rank == 0:
+        if False not in buffer:
+            epsilon_reached = True
+
+    # Send epsilon reached to all agents
+    epsilon_reached = world.bcast(epsilon_reached, root=0)
+
+    # Check if all agent have reached epsilon condition and then exit from loop
+    if epsilon_reached:
+        # print("prima del break alla iterazione: ", ITERATION_DONE, " rank = ", rank)
+        break
+
+    if tt in range(0, MAX_ITERATIONS, 1000):
+        print(tt, "\n")
+    ITERATION_DONE = tt
+
+# synchronise
+world.Barrier()
+np.resize(XX, [ITERATION_DONE, *dimensions])
+np.resize(losses, ITERATION_DONE)
+print(XX[ITERATION_DONE - 3])
+world.Barrier()
 
 if rank != 0:
     world.send(losses, dest=0)
+    print(rank, " have sent a message to 0")
 
 if rank == 0:
 
@@ -129,16 +158,16 @@ if rank == 0:
     # We now have the overall loss given from the cost function
     for i in range(1, agents_number):
         agent_loss = world.recv(source=i)
+        print("we are waiting message from agent ", i)
         losses = np.add(losses, agent_loss)
 
     # Plot cost function
     plt.ion()
     plt.show()
-    plt.plot(range(0, MAX_ITERATIONS-3), losses[0:MAX_ITERATIONS-3])
+    plt.plot(range(0, ITERATION_DONE - 3), losses[0:ITERATION_DONE - 3])
     plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
     plt.draw()
     plt.pause(.001)
-
 
 if rank == 0:
     to_find = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
@@ -148,9 +177,10 @@ if rank == 0:
         _tot_exp = 0
         _tmp = np.zeros(4)
         for i in range(0, 4):
-            val = np.dot(XX[len(XX)-2][i], _set[0:4])
+            val = np.dot(XX[len(XX) - 2][i], _set[0:4])
             _tmp[i] = val
             _tot_exp = _tot_exp + val
+        # TODO Warning invalid value encountered at 184 but it works
         _tmp = np.divide(_tmp, _tot_exp)
         _predicted = np.argmax(_tmp)
         # print('Predicted: ', _predicted, ', real: ', _set[4])
