@@ -47,7 +47,7 @@ def normalize_dataset(dataset):
 
 
 # --oversubscribe -n 6
-dataset = np.loadtxt('iris_training_complete.txt', delimiter=';', dtype=float)
+dataset = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
 # dataset = normalize_dataset(dataset)
 
 """ Define world parameter, these have been got from mpi system """
@@ -94,7 +94,7 @@ ITERATION_DONE = 0
 
 for tt in range(1, MAX_ITERATIONS - 1):
 
-    alpha = 0.01 * (1 / tt) ** 0.1
+    alpha = 0.01 * (1 / tt) ** 0.01
 
     # Update with my previous state
     u_i = np.multiply(XX[tt - 1], weight)
@@ -135,6 +135,7 @@ for tt in range(1, MAX_ITERATIONS - 1):
     # Check if all agent have reached epsilon condition and then exit from loop
     if epsilon_reached:
         # print("prima del break alla iterazione: ", ITERATION_DONE, " rank = ", rank)
+        print("rank " , rank, "esce all'iterazone " , tt )
         break
 
     if tt in range(0, MAX_ITERATIONS, 1000):
@@ -143,14 +144,13 @@ for tt in range(1, MAX_ITERATIONS - 1):
 
 # synchronise
 world.Barrier()
-np.resize(XX, [ITERATION_DONE, *dimensions])
-np.resize(losses, ITERATION_DONE)
 print(XX[ITERATION_DONE - 3])
 world.Barrier()
 
 if rank != 0:
     world.send(losses, dest=0)
     print(rank, " have sent a message to 0")
+
 
 if rank == 0:
 
@@ -177,10 +177,9 @@ if rank == 0:
         _tot_exp = 0
         _tmp = np.zeros(4)
         for i in range(0, 4):
-            val = np.dot(XX[len(XX) - 2][i], _set[0:4])
+            val = np.dot(XX[ITERATION_DONE - 2][i], _set[0:4])
             _tmp[i] = val
             _tot_exp = _tot_exp + val
-        # TODO Warning invalid value encountered at 184 but it works
         _tmp = np.divide(_tmp, _tot_exp)
         _predicted = np.argmax(_tmp)
         # print('Predicted: ', _predicted, ', real: ', _set[4])
