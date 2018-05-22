@@ -2,6 +2,8 @@ from mpi4py import MPI
 import create_matrix as cm
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+
 
 CONSTANT_TO_SUBTRACT = 15
 
@@ -47,7 +49,7 @@ def normalize_dataset(dataset):
 
 
 # --oversubscribe -n 6
-dataset = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
+dataset = np.loadtxt('iris_training_complete.txt', delimiter=';', dtype=float)
 # dataset = normalize_dataset(dataset)
 
 """ Define world parameter, these have been got from mpi system """
@@ -56,7 +58,7 @@ agents_number = world.Get_size()
 rank = world.Get_rank()
 
 """ Define variables """
-MAX_ITERATIONS = 10000
+MAX_ITERATIONS = 500
 dimensions = [4, 4]
 epsilon = 0.001
 
@@ -68,7 +70,10 @@ start_dataset = int(start_dataset)
 end_dataset = int(end_dataset)
 personal_dataset = dataset[start_dataset:end_dataset]
 
-print("agent ", rank, " got ", len(personal_dataset), " rows of dataset")
+print("Agent ", rank, " got ", len(personal_dataset), " rows of dataset")
+
+world.Barrier()
+sys.stdout.flush()
 
 adj = cm.createAdjM(agents_number)
 
@@ -134,22 +139,31 @@ for tt in range(1, MAX_ITERATIONS - 1):
 
     # Check if all agent have reached epsilon condition and then exit from loop
     if epsilon_reached:
-        # print("prima del break alla iterazione: ", ITERATION_DONE, " rank = ", rank)
-        print("rank " , rank, "esce all'iterazone " , tt )
+        if rank == 0:
+            print("Exiting at iteration ", tt, "/", MAX_ITERATIONS, "Condition on epsilon reached")
+            sys.stdout.flush()
+        
         break
 
-    if tt in range(0, MAX_ITERATIONS, 1000):
-        print(tt, "\n")
+    if tt in range(0, MAX_ITERATIONS, 100):
+        if rank == 0 :
+            print("Iteration ", tt, "/" , MAX_ITERATIONS)
+            sys.stdout.flush()
     ITERATION_DONE = tt
 
 # synchronise
 world.Barrier()
+
+print("Parameters of node ", rank)
 print(XX[ITERATION_DONE - 3])
+
 world.Barrier()
+sys.stdout.flush()
+
 
 if rank != 0:
     world.send(losses, dest=0)
-    print(rank, " have sent a message to 0")
+    
 
 
 if rank == 0:
@@ -158,7 +172,6 @@ if rank == 0:
     # We now have the overall loss given from the cost function
     for i in range(1, agents_number):
         agent_loss = world.recv(source=i)
-        print("we are waiting message from agent ", i)
         losses = np.add(losses, agent_loss)
 
     # Plot cost function
@@ -167,7 +180,8 @@ if rank == 0:
     plt.plot(range(0, ITERATION_DONE - 3), losses[0:ITERATION_DONE - 3])
     plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
     plt.draw()
-    plt.pause(.001)
+    plt.pause(1)
+    plt.clf()
 
 if rank == 0:
     to_find = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
