@@ -58,9 +58,10 @@ agents_number = world.Get_size()
 rank = world.Get_rank()
 
 """ Define variables """
-MAX_ITERATIONS = 500
-dimensions = [4, 4]
-epsilon = 0.001
+MAX_ITERATIONS = 10000
+dimensions = [3, 4]
+epsilon = 0.1
+category_n = 3
 
 # Assign dataset to each agent
 dataset_portion = len(dataset) / agents_number
@@ -99,7 +100,7 @@ ITERATION_DONE = 0
 
 for tt in range(1, MAX_ITERATIONS - 1):
 
-    alpha = 0.01 * (1 / tt) ** 0.01
+    alpha = 0.01 * (1 / tt) ** 0.2
 
     # Update with my previous state
     u_i = np.multiply(XX[tt - 1], weight)
@@ -113,14 +114,14 @@ for tt in range(1, MAX_ITERATIONS - 1):
         u_i = u_i + world.recv(source=node) * weight
 
     # Go in the opposite direction with respect to the gradient
-    grad = np.multiply(alpha, gradientF(XX[tt - 1], 4))
+    grad = np.multiply(alpha, gradientF(XX[tt - 1], category_n))
 
     for i in range(0, dimensions[0]):
         u_i[i] = np.subtract(u_i[i], grad[i])
     # Store  my new state
     XX[tt] = u_i
 
-    losses[tt] = loss(XX[tt], 4)
+    losses[tt] = loss(XX[tt], category_n)
 
     # Checking epsilon reached condition
     if np.linalg.norm(np.subtract(XX[tt], XX[tt - 1])) < epsilon:
@@ -163,8 +164,6 @@ sys.stdout.flush()
 
 if rank != 0:
     world.send(losses, dest=0)
-    
-
 
 if rank == 0:
 
@@ -180,7 +179,7 @@ if rank == 0:
     plt.plot(range(0, ITERATION_DONE - 3), losses[0:ITERATION_DONE - 3])
     plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
     plt.draw()
-    plt.pause(1)
+    plt.pause(100)
     plt.clf()
 
 if rank == 0:
