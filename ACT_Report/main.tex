@@ -1,0 +1,92 @@
+% Template"Advanced control techniques" project
+
+\documentclass[a4paper,11pt,oneside]{book}
+\usepackage[latin1]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb,amsmath,color,psfrag}
+\usepackage[draft]{graphicx}
+\usepackage{cite}
+
+
+\begin{document}
+\pagestyle{myheadings}
+
+\input{cover}
+
+\newpage
+\thispagestyle{empty}
+
+%%%%%% ABSTRACT %%%%%%%%%%
+\begin{center}
+\chapter*{}
+\thispagestyle{empty}
+{\Huge \textbf{Abstract}}\\
+\vspace{15mm}
+\end{center}
+Put here the abstract of the project. The document must be at most 18 pages plus
+introduction pages and bibliography.
+
+The project deals with the design and implementation of a distributed
+optimization algorithm in order to solve a Supervised Learning (SL) problem using a multinomial logistic regression.
+It will use a communication 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents \thispagestyle{empty}
+\listoffigures\thispagestyle{empty}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%% INTRODUZIONE %%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter*{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
+MAX 2 pages
+\section*{Motivations}
+\section*{Contributions}
+% \section*{Organization}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%% CAPITOLO  %%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Chapter 1 Tecnologies Used}
+First-chapter for problem set-up and description of the implemented solution. 
+
+\section{Subgradient Method}
+\subsection {Multinomial Logistic Regression}
+
+Citation \cite{MR-GB:11}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%% CAPITOLO  %%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Chapter 2 Implementation Problem}
+Second chapter for description of the results (simulations and experiments where
+applicable).
+\section{Section title}
+\subsection {Subsection title}
+
+Citation \cite{MR-GB:11}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%% SVILUPPI FUTURI %%%%%%
+\chapter*{Conclusions} % and future developments}
+\addcontentsline{toc}{chapter}{Conclusions} %  and future developments}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% %%%% APPENDIX %%%%%
+% \appendix
+% \chapter{Appendix title}
+% %%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%% BIBLIOGRAPHY %%%%%%%%%%%%%%
+\bibliography{bibliography}{}
+\bibliographystyle{plain}
+\addcontentsline{toc}{chapter}{Bibliography}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}
