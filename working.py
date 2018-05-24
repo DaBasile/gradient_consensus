@@ -58,9 +58,9 @@ agents_number = world.Get_size()
 rank = world.Get_rank()
 
 """ Define variables """
-MAX_ITERATIONS = 10000
+MAX_ITERATIONS = 1000
 dimensions = [3, 4]
-epsilon = 0.1
+epsilon = 0.001
 category_n = 3
 
 # Assign dataset to each agent
@@ -100,7 +100,7 @@ ITERATION_DONE = 0
 
 for tt in range(1, MAX_ITERATIONS - 1):
 
-    alpha = 0.01 * (1 / tt) ** 0.2
+    alpha = 0.01 * (1 / tt) ** 0.01
 
     # Update with my previous state
     u_i = np.multiply(XX[tt - 1], weight)
@@ -179,7 +179,7 @@ if rank == 0:
     plt.plot(range(0, ITERATION_DONE - 3), losses[0:ITERATION_DONE - 3])
     plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
     plt.draw()
-    plt.pause(100)
+    plt.pause(0.00001)
     plt.clf()
 
 if rank == 0:
