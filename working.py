@@ -189,7 +189,7 @@ if rank == 0:
     for _set in to_find:
         _tot_exp = 0
         _tmp = np.zeros(4)
-        for i in range(0, 4):
+        for i in range(0, category_n):
             val = np.dot(XX[ITERATION_DONE - 2][i], _set[0:4])
             _tmp[i] = val
             _tot_exp = _tot_exp + val
