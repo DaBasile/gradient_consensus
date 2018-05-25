@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def loss(all_theta, category_count, personal_dataset, CONSTANT_TO_SUBTRACT):
+def loss_softmax(all_theta, category_count, personal_dataset, CONSTANT_TO_SUBTRACT):
     the_sum = 0
 
     for index in range(0, len(personal_dataset)):
@@ -20,7 +20,7 @@ def loss(all_theta, category_count, personal_dataset, CONSTANT_TO_SUBTRACT):
     return the_sum
 
 
-def softmaxRegression(all_theta, category_count, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT):
+def gradient_softmax(all_theta, category_count, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT):
     thetas = np.zeros(dimensions)
 
     for index in range(0, len(personal_dataset)):
@@ -42,7 +42,30 @@ def softmaxRegression(all_theta, category_count, dimensions, personal_dataset, C
     return thetas
 
 
-def quadratic(all_theta, category_count, dimensions, personal_dataset, Q, r):
+def loss_quadratic(all_theta, category_count, dimensions, personal_dataset, Q, r):
+    thetas = np.zeros(dimensions)
+    cat_number = np.zeros(category_count)
+
+    for index in range(0, len(personal_dataset)):
+
+        for category in range(0, category_count):
+
+            if category == personal_dataset[index][4]:
+                current_set = np.multiply(all_theta[category], personal_dataset[index][:4])
+                thetas[category] = thetas[category] + np.sum([np.sum([1 / 2 * np.dot(np.dot(current_set, Q),
+                                                                                     np.transpose(current_set))],
+                                                                     axis=0),
+                                                              np.dot(current_set, r)], axis=0)
+                cat_number[category] = cat_number[category] + 1
+
+    _sum = 0
+
+    for category in range(0, category_count):
+        _sum = _sum + np.divide(thetas[category], cat_number[category]).sum(dtype=np.float64) / 4
+    return _sum
+
+
+def gradient_quadratic(all_theta, category_count, dimensions, personal_dataset, Q, r):
     thetas = np.zeros(dimensions)
 
     for index in range(0, len(personal_dataset)):
@@ -50,12 +73,15 @@ def quadratic(all_theta, category_count, dimensions, personal_dataset, Q, r):
         for category in range(0, category_count):
 
             if category == personal_dataset[index][4]:
-                thetas[category] = np.sum([
+                thetas[category] = np.sum([thetas[category], np.sum([
                     np.sum([
                         1 / 2 * np.dot(np.transpose(Q),
                                        np.multiply(all_theta[category], personal_dataset[index][:4])),
                         1 / 2 * np.dot(Q, np.multiply(all_theta[category], personal_dataset[index][:4]))],
-                        axis=0), np.transpose(r)], axis=0)
+                        axis=0), np.transpose(r)], axis=0)], axis=0)
+
+    for category in range(0, category_count):
+        thetas[category] = np.divide(thetas[category], len(personal_dataset))
     return thetas
 
 
@@ -67,12 +93,8 @@ def exponential(all_theta, category_count, dimensions, personal_dataset, CONSTAN
         for category in range(0, category_count):
 
             if category == personal_dataset[index][4]:
-                current_vector = np.dot(all_theta[category], personal_dataset[index][:4])
-                np.sinh(current_vector)
-                thetas[category] = \
-                    np.sum([np.cosh(current_vector),
-                           #-np.multiply(np.divide(current_vector, np.linalg.norm(current_vector)),
-                           np.sinh(current_vector)])
+                coeff = np.exp(
+                    np.dot(all_theta[category], personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
+                thetas[category] = thetas[category] - np.multiply(personal_dataset[index][:4], coeff)
 
     return thetas
-
