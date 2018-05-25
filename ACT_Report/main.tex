@@ -10,6 +10,9 @@
 \usepackage{cite}
 \usepackage{url}
 \usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
 
 
 \begin{document}
@@ -27,12 +30,7 @@
 {\Huge \textbf{Abstract}}\\
 \vspace{15mm}
 \end{center}
-Put here the abstract of the project. The document must be at most 18 pages plus
-introduction pages and bibliography.
-
-The project deals with the design and implementation of a distributed
-optimization algorithm in order to solve a Supervised Learning (SL) problem using a multinomial logistic regression.
-It will use the common used message-passing so called MPI. 
+In this report, it will be shown how to solve a Multinomial Logistic Regression (also known as \textit{Softmax Regression}) using a distributed method. The sub-gradient method has been used to distribute calculations among a configurable number of agents. A portion of the dataset is given to each agent and used to minimize a cost function related to the portion of the dataset in its possession.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -44,31 +42,100 @@ It will use the common used message-passing so called MPI.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
-MAX 2 pages
-\section*{Motivations}
-\section*{Contributions}
+In the past there was a single \textit{Mainframe} that executed all digital operations. After, it was born the \textit{Personal Computer} and more people could execute the same operations in private. Today exist the \textit{Microcontrollers} that permit to make smart an infinity of devices. More algorithms have been created to connect these devices for distribute the computation.\\
+This work borns to implement a scenario in which there are some agents that estimate a cost function using their own information and those of the other agents; they use a \textit{Distribuited Sub-gradient Method} to update their own estimate and, in particular, they resolve a \textit{Multinomial Logistic Regression}. After some test in \textit{MATLAB}, it is used \textit{MPI} implemented with \textit{Python}.\\
+The present work is divided into two chapters. In the Chapter 1 it is introduced the theory behind the problem and it is visualized and commented the implementation code. In the Chapter 2 there are the results of simulations with some considerations.
 % \section*{Organization}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%% CAPITOLO  %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Chapter 1 Tecnologies Used}
+\chapter{Chapter 1 Problem and its implementation} \label{Cap1}
 First-chapter for problem set-up and description of the implemented solution. 
 
-\section{Subgradient Method}
-\subsection {Multinomial Logistic Regression}
+\section{Theory of the problem} \label{Sec1.1}
+\subsection {Distributed Subgradient Methods for Multi-Agent Optimization} \label{Subsec1.1.1}
+In this problem there are $m$ agents that cooperatively minimize a common additive cost. The optimization general problem is:\\
+\begin{equation} \label{costfunct}
+minimize \quad \sum\limits_{i=1}^{m} f_{i} \left( x \right) \qquad subject \ to \quad x \in \mathbb{R}^n,
+\end{equation}
+where $f_i : \mathbb{R}^n \longrightarrow \mathbb{R}$ is the cost function of agent $i$, known by this agent only, and $x \in \mathbb{R}$ is a decision vector. It is assumes that:
+\begin{itemize} 
+\item The cost function is convex;
+\item the agents are distributed over a time-varying topology;
+\item the graph $\left(V,E_\infty\right)$ is connected, where $E_\infty$ is the set of edges $\left(j,i\right)$ representing agent pairs communicating directly infinitely many times;
+\item there isn't communication delay.
+\end{itemize} 
+Every agent $i$ generates and maintains estimates of the optimal decision vector based on information concerning its own cost function and exchanges this estimate with its directly neighbors at discrete times $t_0, t_1, t_2, ...$. Moreover, each agent $i$ has a vector of weights $a^i(k) \in \mathbb{R}^m$ at any time $t_k$; for each time, the scalar $a_i^j(k)$ is zero if the agent $i$ doesn't directly comunicate with $j$, else it is the weight assigned from the agent $i$ to the information $x^j$ obtained from $j$ during the time interval $(t_k,t_{k+1})$. The estimates are updated according to the update rule:
+\cite{CITATION:1}
+\begin{equation} \label{update}
+x^i\left(k+1\right) = \sum_{j=1}^{m}{a_j^i\left(k\right)x^i\left(k\right)-a^i\left(k\right)d_i\left(k\right)}
+\end{equation}
+where $\alpha^i(k)>0$ is the (diminishing) stepsize used by agent $i$ and the vector $d_i(k)$ is a subgradient of agent $i$ objective function $f_i(x)$ at $x=x^i(k)$.
 
-Citation \cite{CITATION:1}
+\subsection {Multinomial Logistic Regression} \label{Subsec1.1.2}
+
+\begin{equation}
+f_i\left(\omega\right):=\left|\left|h_\omega\left(x^{(i)}\right)-y^{(i)}\right|\right|^2
+\end{equation}
+
+\begin{equation}
+f\left(\omega\right):=\sum_{i=1}^{N}{f_i\left(\omega\right)}
+\end{equation}
+
+\begin{equation}
+\omega^*:=\arg\min_\omega f\left(\omega\right)
+\end{equation}
+
+\begin{equation}
+h_\theta=\frac{1}{\sum_{j=1}^{K}{exp\left(\theta^{(j)^\top}x\right)}}\begin{bmatrix}exp\left(\theta^{(1)\top}x\right)  \\ \vdots \\ exp\left(\theta^{(K)\top}x\right) \end{bmatrix}
+\end{equation}
+
+\begin{equation}
+\theta^*=\arg\min_\theta -\sum_{i=1}^{N}{g_i(\theta)}
+\end{equation}
+
+\begin{equation}
+g_i\left(\theta\right):=\sum_{k=1}^{K}{1\{y^{(i)}=e_k\}\log{\left( \frac{exp(\theta^{(k)^\top}x^{(i)})}{\sum_{k=1}^{K}{exp( \theta^{(j)^\top}x )}} \right)}}
+\end{equation}
+
+\subsection {Pseudocode} \label{Subsec1.1.3}
+\begin{algorithm}
+\caption{}
+\begin{algorithmic} [1]
+\State \textit{Stop Rules:}
+\State $\left|\left|x_{k+1} - x_k\right|\right|  \leq \varepsilon \qquad \varepsilon$ fixed
+\State Number of maximum iterations reached
+\State \textbf{Start:}
+\State Fix initial conditions for each node $x_i(0) = [0 \quad ... \quad 0]^T$
+\State Define the Adjancency Matrix, Weights Matrix, $\alpha^i = \alpha$ constant for each iteration
+\While{No stop rule is true, each node $i$ does:} 
+	\State calculate $\nabla f_i$
+	\For {each neighbor j}
+		\State $x_i(k+1) = x_i(k+1) + a^i_j(k) x^j(k)$
+	\EndFor
+	\State $x_i(k+1) = x_i(k+1) - \alpha \nabla f_i$
+\EndWhile
+\State \textbf{Result:}
+\State Each node $i$ should converge to $x^*$
+\State The minimum of function is $\sum \limits_{i=1}^{m}f_i(x^*)$
+\end{algorithmic}
+\end{algorithm}
+
+
+\section {Code Implementation} \label{Sec1.2}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%% CAPITOLO  %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Chapter 2 Implementation Problem}
+\chapter{Chapter 2 Results of simulations} \label{Cap2}
 Second chapter for description of the results (simulations and experiments where
 applicable).
-\section{Section title}
-\subsection {Subsection title}
+
+
 
 Citation \cite{CITATION:2}
 
@@ -78,6 +145,8 @@ Citation \cite{CITATION:2}
 %%%%% SVILUPPI FUTURI %%%%%%
 \chapter*{Conclusions} % and future developments}
 \addcontentsline{toc}{chapter}{Conclusions} %  and future developments}
+In this work it has been resolved a Multinomial Logistic Regression problem using MPI in Python. Each agent used a Distributed Sub-gradient method to update its own estimate of optimal solution.
+%% Tutte le considerazioni finali sintetiche si fanno in base alla tabella dei risultati del capitolo 2.
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % %%%% APPENDIX %%%%%
