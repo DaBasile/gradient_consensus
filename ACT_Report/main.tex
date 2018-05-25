@@ -42,9 +42,9 @@ In this report, it will be shown how to solve a Multinomial Logistic Regression 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
-In the past there was a single \textit{Mainframe} that executed all digital operations. After, it was born the \textit{Personal Computer} and more people could execute the same operations in private. Today exist the \textit{Microcontrollers} that permit to make smart an infinity of devices. More algorithms have been created to connect these devices for distribute the computation.\\
-This work borns to implement a scenario in which there are some agents that estimate a cost function using their own information and those of the other agents; they use a \textit{Distribuited Sub-gradient Method} to update their own estimate and, in particular, they resolve a \textit{Multinomial Logistic Regression}. After some test in \textit{MATLAB}, it is used \textit{MPI} implemented with \textit{Python}.\\
-The present work is divided into two chapters. In the Chapter 1 it is introduced the theory behind the problem and it is visualized and commented the implementation code. In the Chapter 2 there are the results of simulations with some considerations.
+In the past there was a single \textit{Mainframe} that executed all digital operations. Years after, with the creation of the Personal Computer, more people could execute the same operations in private. Today's \textit{Microcontrollers} allow to make smart an in finity of devices. More algorithms have been created to connect these devices to distribute.\\
+This work implements a scenario in which there are some agents that estimate a cost function using their own information and those of the other agents; they use a \textit{Distributed Sub-gradient Method} to update their own estimate and, in particular, they resolve a \textit{Multinomial Logistic Regression}. After some test in \textit{MATLAB}, it is used \textit{MPI} implemented with \textit{Python}.\\
+The present work is divided into two chapters. In Chapter 1, it is introduced the theory behind the problem and it is visualized and commented the implementation code. In Chapter 2 there are the results of simulations with some considerations.
 % \section*{Organization}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -68,37 +68,42 @@ where $f_i : \mathbb{R}^n \longrightarrow \mathbb{R}$ is the cost function of ag
 \item there isn't communication delay.
 \end{itemize} 
 Every agent $i$ generates and maintains estimates of the optimal decision vector based on information concerning its own cost function and exchanges this estimate with its directly neighbors at discrete times $t_0, t_1, t_2, ...$. Moreover, each agent $i$ has a vector of weights $a^i(k) \in \mathbb{R}^m$ at any time $t_k$; for each time, the scalar $a_i^j(k)$ is zero if the agent $i$ doesn't directly comunicate with $j$, else it is the weight assigned from the agent $i$ to the information $x^j$ obtained from $j$ during the time interval $(t_k,t_{k+1})$. The estimates are updated according to the update rule:
-\cite{CITATION:1}
 \begin{equation} \label{update}
 x^i\left(k+1\right) = \sum_{j=1}^{m}{a_j^i\left(k\right)x^i\left(k\right)-a^i\left(k\right)d_i\left(k\right)}
 \end{equation}
-where $\alpha^i(k)>0$ is the (diminishing) stepsize used by agent $i$ and the vector $d_i(k)$ is a subgradient of agent $i$ objective function $f_i(x)$ at $x=x^i(k)$.
+where $\alpha^i(k)>0$ is the (diminishing) stepsize used by agent $i$ and the vector $d_i(k)$ is a subgradient of agent $i$ objective function $f_i(x)$ at $x=x^i(k)$. \cite{CITATION:1}
 
 \subsection {Multinomial Logistic Regression} \label{Subsec1.1.2}
+The problem to be solved is a Supervised Learning problem called Multinomial Logistic Regression, also known as Softmax Regression, and it generalizes the more common Logistic Regression. The difference between them is that in the latter there are several classes to be considered, in the matter, there are only two classes (or equivalently a binary class). \\
 
+The problem to be solved is to find a set of coefficients based on a given dataset to predict the belonging class for an unseen set of features, while minimizing a cost function. The dataset is composed of \textit{N} labelled examples $\{(x^{(1)}, y^{(1)}), ..., (x^{(N)}, y^{(N)})\}$. Each $x^{(i)} \in R^{d_{x}}$ for $i=1, ..., N$ is composed of some features which represent the value upon which we base the estimation of the belonging class, while $y^{(i)} \in R^{d_{y}}$ is the belonging class for the \textit{i-th} example, and can be a values in $\{1, ..., K\}$.
+
+Given a single training example $(x^{(i)}, y^{(i)})$, the definition of the cost function is:
 \begin{equation}
 f_i\left(\omega\right):=\left|\left|h_\omega\left(x^{(i)}\right)-y^{(i)}\right|\right|^2
 \end{equation}
-
+where the $\omega \in R^{d_{x}}$ are the weights of the hypothesis function $h_{\omega}$. The overall cost function can be defined as:
 \begin{equation}
 f\left(\omega\right):=\sum_{i=1}^{N}{f_i\left(\omega\right)}
 \end{equation}
-
+We solve the problem by finding the solution of the following optimization problem:
 \begin{equation}
 \omega^*:=\arg\min_\omega f\left(\omega\right)
 \end{equation}
-
+In the Multinomial Logistic Regression, a common choice for the hypothesis function is the following:
 \begin{equation}
 h_\theta=\frac{1}{\sum_{j=1}^{K}{exp\left(\theta^{(j)^\top}x\right)}}\begin{bmatrix}exp\left(\theta^{(1)\top}x\right)  \\ \vdots \\ exp\left(\theta^{(K)\top}x\right) \end{bmatrix}
 \end{equation}
-
+where the weights $\omega = \theta = (\theta^{(1)}, ..., \theta^{(K)}) \in R^{d_{x}}$. \\
+Using this function, the solution of the problem is given by finding:
 \begin{equation}
 \theta^*=\arg\min_\theta -\sum_{i=1}^{N}{g_i(\theta)}
 \end{equation}
-
+with
 \begin{equation}
 g_i\left(\theta\right):=\sum_{k=1}^{K}{1\{y^{(i)}=e_k\}\log{\left( \frac{exp(\theta^{(k)^\top}x^{(i)})}{\sum_{k=1}^{K}{exp( \theta^{(j)^\top}x )}} \right)}}
 \end{equation}
+where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.
 
 \subsection {Pseudocode} \label{Subsec1.1.3}
 \begin{algorithm}
