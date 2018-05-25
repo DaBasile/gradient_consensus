@@ -1,6 +1,5 @@
 from random import randint
 from warnings import warn
-
 import networkx as nx
 import numpy as np
 
