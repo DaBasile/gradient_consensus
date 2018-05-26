@@ -10,7 +10,7 @@ CONSTANT_TO_SUBTRACT = 15
 
 usage_message = "usage mpiexec -n (number of agent) python3 filename.py -f \"function name\"" \
                  " optional[-k (number of connection per agent) " \
-                 "-a (alpha type \"diminiscing\"/\"constant\") (alpha coefficient) (psi coefficient) " \
+                 "-a (alpha type \"diminishing\"/\"constant\") (alpha coefficient) (psi coefficient) " \
                  "-e (epsilon)]"
 
 ################################################
@@ -133,7 +133,6 @@ if len(sys.argv) >= 4:
 
 # --oversubscribe -n 6
 dataset = np.loadtxt('iris_training_complete.txt', delimiter=';', dtype=float)
-# dataset = normalize_dataset(dataset)
 
 """ Define world parameter, these have been got from mpi system """
 world = MPI.COMM_WORLD
@@ -142,8 +141,8 @@ rank = world.Get_rank()
 
 """ Define variables """
 MAX_ITERATIONS = 10000
-dimensions = [3, 4]
 category_n = 3
+dimensions = [category_n, 4]
 
 # Assign dataset to each agent
 dataset_portion = len(dataset) / agents_number
@@ -177,7 +176,6 @@ if function_name == "quadratic":
     Q = cm.createQ(dimensions[1])
     r = cm.createR(dimensions[1])
 
-# epsilon_reached = [False for i in range(agents_number)]
 epsilon_reached = False
 buff = False
 
@@ -187,7 +185,7 @@ start_time = time.time()
 
 for tt in range(1, MAX_ITERATIONS - 1):
 
-    if alpha_type == "diminiscing":
+    if alpha_type == "diminishing":
         alpha = psi_coefficient * (1 / tt) ** alpha_coefficient
     else:
         alpha = alpha_coefficient
@@ -213,7 +211,7 @@ for tt in range(1, MAX_ITERATIONS - 1):
         gradient = func.gradient_quadratic(XX[tt - 1], category_n, dimensions, personal_dataset, Q, r)
 
     elif function_name == "exponential":
-        gradient = func.exponential(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
+        gradient = func.gradient_exponential(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
 
      #print(gradient)
 
@@ -230,6 +228,9 @@ for tt in range(1, MAX_ITERATIONS - 1):
 
     elif function_name == "quadratic":
         losses[tt] = func.loss_quadratic(XX[tt], category_n, dimensions, personal_dataset, Q, r)
+
+    elif function_name == "exponential":
+        losses[tt] = func.loss_exponential(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
 
     # Checking epsilon reached condition
     if np.linalg.norm(np.subtract(XX[tt], XX[tt - 1])) < epsilon:
@@ -271,6 +272,7 @@ sys.stdout.flush()
 
 if rank != 0:
     world.send(losses, dest=0)
+    world.send(XX, dest=0)
 
 
 ########################################
@@ -284,14 +286,28 @@ if rank == 0:
         agent_loss = world.recv(source=i)
         losses = np.add(losses, agent_loss)
 
-    # Plot cost function
-    plt.ion()
+    XX_agents = np.zeros([agents_number, *[MAX_ITERATIONS, *dimensions]])
+    XX_agents[0] = XX
+    for i in range(1, agents_number):
+        XX_agents[i] = world.recv(source=i)
+
+    log_losses = np.zeros(len(losses))
+    for index in range(0, len(losses)-1):
+        log_losses[index] = np.log(losses[index] - 8.945)
+
+    # Plot cost function logarithmic
+    plt.figure()
+    plt.plot(range(0, ITERATION_DONE - 3), log_losses[0:ITERATION_DONE - 3])
+    plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
     plt.show()
+
+    # Plot cost function
+    plt.figure()
     plt.plot(range(0, ITERATION_DONE - 3), losses[0:ITERATION_DONE - 3])
-    plt.title("$\sum_{i=0}^{" + str(agents_number) + "} f_i$")
-    plt.draw()
-    plt.pause(30)
-    plt.clf()
+    plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
+    plt.show()
+    #plt.pause(100)
+
 
 if rank == 0:
     to_find = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
@@ -301,7 +317,7 @@ if rank == 0:
         _tot_exp = 0
         _tmp = np.zeros(4)
         for i in range(0, category_n):
-            val = np.dot(XX[ITERATION_DONE - 2][i], _set[0:4])
+            val = np.exp(np.dot(XX[ITERATION_DONE - 2][i], _set[0:4]) - CONSTANT_TO_SUBTRACT)
             _tmp[i] = val
             _tot_exp = _tot_exp + val
         _tmp = np.divide(_tmp, _tot_exp)
@@ -310,8 +326,24 @@ if rank == 0:
         if _predicted != _set[4]:
             wrong_answers = wrong_answers + 1
 
-    # print("Wrong predicted values: ", wrong_answers, "/", len(to_find))
+    print("Wrong predicted values: ", wrong_answers, "/", len(to_find))
+
+    # Show consensus
+    # for category in range(0, category_n):
+    for component in range(0, 4):
+        figure = plt.figure()
+        for agent in range(0, agents_number):
+            label = "Agent " + str(agent)
+            plt.plot(range(0, ITERATION_DONE), XX_agents[agent][0:ITERATION_DONE, 0, component], label=label)
+        plt.title("Component #" + str(component) + " of each $\Theta_{0}^{i}$")
+        leg = plt.legend(loc='best', ncol=2, mode="expand", shadow=True, fancybox=True)
+        leg.get_frame().set_alpha(0.5)
+        plt.show()
     print("Iteration done: ", ITERATION_DONE, " Agent number: ", agents_number, "\nEpsilon: ", epsilon,
           " Const  Alpha: ", alpha_coefficient, " Const Psi ", psi_coefficient,
           "\nExecution time: ", time.time() - start_time, " Wrong preditions: ", wrong_answers)
+
+    plt.pause(20)
     input("Press [enter] to continue.")
+    # print("Wrong predicted values: ", wrong_answers, "/", len(to_find))
+
