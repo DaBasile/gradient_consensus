@@ -37,7 +37,8 @@ def gradient_softmax(all_theta, category_count, dimensions, personal_dataset, CO
 
             _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
             coeff = coeff - np.divide(_exp, denominator)
-            thetas[category] = thetas[category] - np.multiply(personal_dataset[index][:4], coeff)
+            thetas[category] = thetas[category] - ((1/len(personal_dataset)) *
+                                                   np.multiply(personal_dataset[index][:4], coeff))
 
     return thetas
 
@@ -61,7 +62,7 @@ def loss_quadratic(all_theta, category_count, dimensions, personal_dataset, Q, r
     _sum = 0
 
     for category in range(0, category_count):
-        _sum = _sum + np.divide(thetas[category], cat_number[category]).sum(dtype=np.float64) / 4
+        _sum = _sum + np.divide(thetas[category], len(personal_dataset)).sum(dtype=np.float64) / 4
     return _sum
 
 
@@ -85,7 +86,7 @@ def gradient_quadratic(all_theta, category_count, dimensions, personal_dataset, 
     return thetas
 
 
-def exponential(all_theta, category_count, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT):
+def loss_exponential(all_theta, category_count, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT):
     thetas = np.zeros(dimensions)
 
     for index in range(0, len(personal_dataset)):
@@ -97,4 +98,24 @@ def exponential(all_theta, category_count, dimensions, personal_dataset, CONSTAN
                     np.dot(all_theta[category], personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
                 thetas[category] = thetas[category] - np.multiply(personal_dataset[index][:4], coeff)
 
+    _sum = 0
+
+    for category in range(0, category_count):
+        _sum = _sum + np.divide(thetas[category], len(personal_dataset)).sum(dtype=np.float64) / 4
+    return _sum
+
+
+def gradient_exponential(all_theta, category_count, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT):
+    thetas = np.zeros(dimensions)
+
+    for index in range(0, len(personal_dataset)):
+
+        for category in range(0, category_count):
+
+            if category == personal_dataset[index][4]:
+                coeff = np.exp(
+                    np.dot(all_theta[category], personal_dataset[index][:4]))
+                thetas[category] = thetas[category] - np.multiply(personal_dataset[index][:4], coeff)
+
     return thetas
+
