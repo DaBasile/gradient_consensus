@@ -27,7 +27,7 @@ if sys.argv[1] == "-f":
         sys.exit("admitted function are: \n \"softmax\" \n \"quadratic\" \n")
 
     alpha_type = "diminiscing"
-    alpha_coefficient = 0.01
+    alpha_exp_coefficient = 0.01
     psi_coefficient = 0.01
     epsilon = 0.01
     number_of_inn_connection = 1
@@ -42,7 +42,7 @@ if len(sys.argv) >= 4:
         if len(sys.argv) >= 6:
             if sys.argv[5] == "-a":
                 alpha_type = sys.argv[6]
-                alpha_coefficient = float(sys.argv[7])
+                alpha_exp_coefficient = float(sys.argv[7])
                 psi_coefficient = float(sys.argv[8])
 
                 if len(sys.argv) >= 10:
@@ -58,7 +58,7 @@ if len(sys.argv) >= 4:
                 if len(sys.argv) >= 8:
                     if sys.argv[7] == "-a":
                         alpha_type = sys.argv[8]
-                        alpha_coefficient = float(sys.argv[9])
+                        alpha_exp_coefficient = float(sys.argv[9])
                         psi_coefficient = float(sys.argv[10])
 
                     else:
@@ -69,7 +69,7 @@ if len(sys.argv) >= 4:
 
     elif sys.argv[3] == "-a":
         alpha_type = sys.argv[4]
-        alpha_coefficient = float(sys.argv[5])
+        alpha_exp_coefficient = float(sys.argv[5])
         psi_coefficient = float(sys.argv[6])
 
         if len(sys.argv) >= 8:
@@ -104,7 +104,7 @@ if len(sys.argv) >= 4:
 
                 if len(sys.argv) >= 8 and sys.argv[7] == "-a":
                     alpha_type = sys.argv[8]
-                    alpha_coefficient = float(sys.argv[9])
+                    alpha_exp_coefficient = float(sys.argv[9])
                     psi_coefficient = float(sys.argv[10])
 
                 else:
@@ -112,7 +112,7 @@ if len(sys.argv) >= 4:
 
             elif sys.argv[5] == "-a":
                 alpha_type = sys.argv[6]
-                alpha_coefficient = float(sys.argv[7])
+                alpha_exp_coefficient = float(sys.argv[7])
                 psi_coefficient = float(sys.argv[8])
 
                 if len(sys.argv) >= 10:
@@ -187,9 +187,9 @@ start_time = time.time()
 for tt in range(1, MAX_ITERATIONS - 1):
 
     if alpha_type == "diminishing":
-        alpha = psi_coefficient * (1 / tt) ** alpha_coefficient
+        alpha = psi_coefficient * (1 / tt) ** alpha_exp_coefficient
     else:
-        alpha = alpha_coefficient
+        alpha = alpha_exp_coefficient
 
     # Update with my previous state
     u_i = np.multiply(XX[tt - 1], weight)
@@ -341,7 +341,7 @@ if rank == 0:
         leg.get_frame().set_alpha(0.5)
         plt.show()
     print("Iteration done: ", ITERATION_DONE, " Agent number: ", agents_number, "\nEpsilon: ", epsilon,
-          " Const  Alpha: ", alpha_coefficient, " Const Psi ", psi_coefficient,
+          " Const  Alpha: ", alpha_exp_coefficient, " Const Psi ", psi_coefficient,
           "\nExecution time: ", time.time() - start_time, " Wrong preditions: ", wrong_answers)
 
     plt.pause(20)
