@@ -14,6 +14,7 @@
 \usepackage{algorithmicx}
 \usepackage{algpseudocode}
 \usepackage{tabularx}
+\usepackage{comment}
 
 
 
@@ -136,17 +137,13 @@ where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%% CAPITOLO  %%%%%%%%%%%%%%%%
+%%%%%%%%% CAPITOLO 2 %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Chapter 2 Results of simulations} \label{Cap2}
 The software described in the previous chapter was used to solve a Multinomial Logistic Regression problem. Specifically, we classified the data of the Iris Dataset.
 
 \section{Dataset, graph description and minimization function} \label{Sec2.1}
-This dataset is composed of 150 instances, 120 used for training, the rest for tests.\\
-The instances contain 3 classes, each representing a type of Iris flower. Every instance has 4 features, sepal length, sepal width, petal length, petal width expressed in $cm$.\\
-We tried different types of graphs. These graphs are all strongly connected and the weight matrices for the nodes are doubly stochastic, as per the assumptions of convergence of the algorithm described in Chapter \ref{Cap1}.\\
-The results discussed in this chapter, if not differently noted, refer to cyclic graphs with a variable number of nodes.\\
-The program can minimize all kinds of loss functions. As shown in Chapter \ref{Sec1.2}, the quadratic and exponential functions can also be used. These last 2 functions don't guarantee useful results and/or convergence. The minimization function used in this chapter is the one described in Chapter \ref{Subsec1.1.2}, softmax.
+This dataset is composed of 150 instances, 120 used for training, the rest for tests. The instances contain 3 classes, each representing a type of Iris flower. Every instance has 4 features, sepal length, sepal width, petal length, petal width expressed in $cm$. We tried different types of graphs. These graphs are all strongly connected and the weight matrices for the nodes are doubly stochastic, as per the assumptions of convergence of the algorithm described in Chapter \ref{Cap1}. The results discussed in this chapter, if not differently noted, refer to cyclic graphs with a variable number of nodes. The program can minimize all kinds of loss functions. As shown in Chapter \ref{Sec1.2}, the quadratic and exponential functions can also be used. These last 2 functions don't guarantee useful results and/or convergence. The minimization function used in this chapter is the one described in Chapter \ref{Subsec1.1.2}, softmax.
 
 \section{Performance} \label{Sec2.2}
 There are some key factors that influence \textit{the computational time}, \textit{the numbers of iterations necessary} and \textit{the accuracy of the results}.\\
@@ -160,30 +157,47 @@ This is a small constant used as stop condition. If the result of the current ca
 \subsection{Learning rate} \label{Subsec2.2.3}
 
 \subsection{Fixed step-size} \label{Subsec2.2.4}
-The step-size alpha plays a big role in the speed of convergence of the algorithm. There are 3 kinds of step-size. Fixed, diminishing and adaptive (Armijo). For reasons not discussed in this paper, it's not possible to use Armijo rule in a distributed problem. We will first deal with a simpler fixed step-size. With an epsilon equal to 0.001 (10-3):\\
+The step-size alpha plays a big role in the speed of convergence of the algorithm. There are 3 kinds of step-size. Fixed, diminishing and adaptive (Armijo). For reasons not discussed in this paper, it's not possible to use Armijo rule in a distributed problem. We will first deal with a simpler fixed step-size. With an epsilon equal to $0.001 (10^{-3})$:\\
 \begin{tabularx}{\textwidth}{|X|X|X|X|}
-%{\begin{tabular}{|c|c|c|c|}
 \hline
 \textbf{Value of fixed step-size} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o.30}\\
 \hline
-0.5 & Not converging & & \\
+0.5 & 4601 & 6.8 & 1\\
 \hline
-0.1 & $>$50000 & $>$80 & 1\\
+0.1 & 2109 & 3.24 & 1\\
 \hline
-0.05 & $>$50000 & $>$80 & 1\\
+0.05 & 2342 & 3.68 & 0\\
 \hline
-0.01 & 2000 & 3 & 1\\
+0.01 & 1153 & 2.05 & 2\\
 \hline
-0.005 & 1600 & 2.4 & 1\\
+0.005 & 680 & 1.14 & 9\\
 \hline
-0.001 & 2000 & 3.2 & 0\\
-\hline
-0.0005 & 1600 & 2.4 & 2\\
-\hline
-0.0001 & 500 & 0.8 & 13\\
+0.001 & 22 & 0.05 & 22\\
 \hline
 \end{tabularx}
-%\end{tabular}
+%\begin{tabularx}{\textwidth}{|X|X|X|X|}
+%%{\begin{tabular}{|c|c|c|c|}
+%\hline
+%\textbf{Value of fixed step-size} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o.30}\\
+%\hline
+%0.5 & Not converging & & \\
+%\hline
+%0.1 & $>$50000 & $>$80 & 1\\
+%\hline
+%0.05 & $>$50000 & $>$80 & 1\\
+%\hline
+%0.01 & 2000 & 3 & 1\\
+%\hline
+%0.005 & 1600 & 2.4 & 1\\
+%\hline
+%0.001 & 2000 & 3.2 & 0\\
+%\hline
+%0.0005 & 1600 & 2.4 & 2\\
+%\hline
+%0.0001 & 500 & 0.8 & 13\\
+%\hline
+%\end{tabularx}
+%%\end{tabular}
 \\ \\
 These results show a general truth about the step-size. If it is too little the learning process proceeds in a very slow way and it requires a huge amount of iterations. If the learning rate is too high and the gradient descent most probably will overshoot the minimum and not converges. Through trial and error, the step-size 0.001 was identified which allow reaching good performance and accuracy. In fact, in only 2.6 seconds, we can make predictions with no errors, using our 30 instances test dataset.
 
@@ -195,24 +209,41 @@ The diminishing step-size implemented in the code is in this form:\\
 Again, several tests were run by tweaking the constant and the exponent.\\ \\
 \begin{tabularx}{\textwidth}{|X|X|X|X|X|}
 \hline
-\textbf{Alpha\_const} & \textbf{Alpha\_exp} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o. 30}\\
+\textbf{psi\_coeff} & \textbf{alpha\_exp coefficient} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o. 30}\\
 \hline
-1 & 0.01 & 96 & 0.14 & 13\\
+1 & 0.01 & $>$20000 & $>$30 & 13\\
 \hline
-1 & 0.1 & 132 & 0.25 & 1\\
+1 & 0.1 & 4033 & 6.66 & 1\\
 \hline
-0.1 & 0.01 & 1300 & 1.9 & 1\\
+0.1 & 0.01 & 2130 & 5.19 & 1\\
 \hline
-0.1 & 0.1 & $>$50000 & $>$80 & 1\\
+0.1 & 0.1 & 2028 & 3.07 & 0\\
 \hline
-0.01 & 0.01 & 1900 & 3.2 & 1\\
+0.01 & 0.01 & 1067 & 1.60 & 2\\
 \hline
-0.01 & 0.1 & $>$50000 & $>$80 & 1\\
+0.01 & 0.1 & 628 & 1 & 8\\
 \hline
 \end{tabularx}
+%\begin{tabularx}{\textwidth}{|X|X|X|X|X|}
+%\hline
+%\textbf{Alpha\_const} & \textbf{Alpha\_exp} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o. 30}\\
+%\hline
+%1 & 0.01 & 96 & 0.14 & 13\\
+%\hline
+%1 & 0.1 & 132 & 0.25 & 1\\
+%\hline
+%0.1 & 0.01 & 1300 & 1.9 & 1\\
+%\hline
+%0.1 & 0.1 & $>$50000 & $>$80 & 1\\
+%\hline
+%0.01 & 0.01 & 1900 & 3.2 & 1\\
+%\hline
+%0.01 & 0.1 & $>$50000 & $>$80 & 1\\
+%\hline
+%\end{tabularx}
 \\ \\
-\noindent The best result is obtained in only 132 iterations, with 1 and 0.1 as constant and exponent respectively. This is done in roughly a quarter of a second, obtaining only one error. The accuracy is worst then the previous result, but this is obtained in a fraction of the time needed to obtain 0 error with a fixed step-size. A difference of 2 or 3 seconds may not matter using the Iris Dataset, with a small amount of calculations. In a setup where a bigger number of calculations and bigger dataset are involved, one may prefer this slightly less accurate but faster approach. This graphs show the difference of the value calculated with the distributed algorithm and the...
-
+%\noindent The best result is obtained in only 132 iterations, with 1 and 0.1 as constant and exponent respectively. This is done in roughly a quarter of a second, obtaining only one error. The accuracy is worst then the previous result, but this is obtained in a fraction of the time needed to obtain 0 error with a fixed step-size. A difference of 2 or 3 seconds may not matter using the Iris Dataset, with a small amount of calculations. In a setup where a bigger number of calculations and bigger dataset are involved, one may prefer this slightly less accurate but faster approach. This graphs show the difference of the value calculated with the distributed algorithm and the...
+The best result in term of accuracy is done with both parameters set to 0.1. The computation time is similar to the fixed-step size. \textit{Reducing the epsilon to 0.01, allow the program to reach consensus in 604 with parameters 0.01 and 0.1 and zero error.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
