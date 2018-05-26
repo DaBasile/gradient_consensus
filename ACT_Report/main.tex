@@ -10,6 +10,12 @@
 \usepackage{cite}
 \usepackage{url}
 \usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{tabularx}
+
+
 
 
 \begin{document}
@@ -27,12 +33,7 @@
 {\Huge \textbf{Abstract}}\\
 \vspace{15mm}
 \end{center}
-Put here the abstract of the project. The document must be at most 18 pages plus
-introduction pages and bibliography.
-
-The project deals with the design and implementation of a distributed
-optimization algorithm in order to solve a Supervised Learning (SL) problem using a multinomial logistic regression.
-It will use the common used message-passing so called MPI. 
+In this report, it will be shown how to solve a Multinomial Logistic Regression (also known as \textit{Softmax Regression}) using a distributed method. The sub-gradient method has been used to distribute calculations among a configurable number of agents. A portion of the dataset is given to each agent and used to minimize a cost function related to the portion of the dataset in its possession.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -44,33 +45,173 @@ It will use the common used message-passing so called MPI.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
-MAX 2 pages
-\section*{Motivations}
-\section*{Contributions}
+In the past there was a single \textit{Mainframe} that executed all digital operations. Years after, with the creation of the Personal Computer, more people could execute the same operations in private. Today's \textit{Microcontrollers} allow to make smart an in finity of devices. More algorithms have been created to connect these devices to distribute.\\
+This work implements a scenario in which there are some agents that estimate a cost function using their own information and those of the other agents; they use a \textit{Distributed Sub-gradient Method} to update their own estimate and, in particular, they resolve a \textit{Multinomial Logistic Regression}. After some test in \textit{MATLAB}, it is used \textit{MPI} implemented with \textit{Python}.\\
+The present work is divided into two chapters. In Chapter 1, it is introduced the theory behind the problem and it is visualized and commented the implementation code. In Chapter 2 there are the results of simulations with some considerations.
 % \section*{Organization}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%% CAPITOLO  %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Chapter 1 Tecnologies Used}
+\chapter{Chapter 1 Problem and its implementation} \label{Cap1}
 First-chapter for problem set-up and description of the implemented solution. 
 
-\section{Subgradient Method}
-\subsection {Multinomial Logistic Regression}
+\section{Theory of the problem} \label{Sec1.1}
+\subsection {Distributed Subgradient Methods for Multi-Agent Optimization} \label{Subsec1.1.1}
+In this problem there are $m$ agents that cooperatively minimize a common additive cost. The optimization general problem is:\\
+\begin{equation} \label{costfunct}
+minimize \quad \sum\limits_{i=1}^{m} f_{i} \left( x \right) \qquad subject \ to \quad x \in \mathbb{R}^n,
+\end{equation}
+where $f_i : \mathbb{R}^n \longrightarrow \mathbb{R}$ is the cost function of agent $i$, known by this agent only, and $x \in \mathbb{R}$ is a decision vector. It is assumes that:
+\begin{itemize} 
+\item The cost function is convex;
+\item the agents are distributed over a time-varying topology;
+\item the graph $\left(V,E_\infty\right)$ is connected, where $E_\infty$ is the set of edges $\left(j,i\right)$ representing agent pairs communicating directly infinitely many times;
+\item there isn't communication delay.
+\end{itemize} 
+Every agent $i$ generates and maintains estimates of the optimal decision vector based on information concerning its own cost function and exchanges this estimate with its directly neighbors at discrete times $t_0, t_1, t_2, ...$. Moreover, each agent $i$ has a vector of weights $a^i(k) \in \mathbb{R}^m$ at any time $t_k$; for each time, the scalar $a_i^j(k)$ is zero if the agent $i$ doesn't directly comunicate with $j$, else it is the weight assigned from the agent $i$ to the information $x^j$ obtained from $j$ during the time interval $(t_k,t_{k+1})$. The estimates are updated according to the update rule:
+\begin{equation} \label{update}
+x^i\left(k+1\right) = \sum_{j=1}^{m}{a_j^i\left(k\right)x^i\left(k\right)-a^i\left(k\right)d_i\left(k\right)}
+\end{equation}
+where $\alpha^i(k)>0$ is the (diminishing) stepsize used by agent $i$ and the vector $d_i(k)$ is a subgradient of agent $i$ objective function $f_i(x)$ at $x=x^i(k)$. \cite{CITATION:1}
 
-Citation \cite{CITATION:1}
+\subsection {Multinomial Logistic Regression} \label{Subsec1.1.2}
+The problem to be solved is a Supervised Learning problem called Multinomial Logistic Regression, also known as Softmax Regression, and it generalizes the more common Logistic Regression. The difference between them is that in the latter there are several classes to be considered, in the matter, there are only two classes (or equivalently a binary class).\\
+The problem to be solved is to find a set of coefficients based on a given dataset to predict the belonging class for an unseen set of features, while minimizing a cost function. The dataset is composed of \textit{N} labelled examples $\{(x^{(1)}, y^{(1)}), ..., (x^{(N)}, y^{(N)})\}$. Each $x^{(i)} \in R^{d_{x}}$ for $i=1, ..., N$ is composed of some features which represent the value upon which we base the estimation of the belonging class, while $y^{(i)} \in R^{d_{y}}$ is the belonging class for the \textit{i-th} example, and can be a values in $\{1, ..., K\}$.
+
+Given a single training example $(x^{(i)}, y^{(i)})$, the definition of the cost function is:
+\begin{equation}
+f_i\left(\omega\right):=\left|\left|h_\omega\left(x^{(i)}\right)-y^{(i)}\right|\right|^2
+\end{equation}
+where the $\omega \in R^{d_{x}}$ are the weights of the hypothesis function $h_{\omega}$. The overall cost function can be defined as:
+\begin{equation}
+f\left(\omega\right):=\sum_{i=1}^{N}{f_i\left(\omega\right)}
+\end{equation}
+We solve the problem by finding the solution of the following optimization problem:
+\begin{equation}
+\omega^*:=\arg\min_\omega f\left(\omega\right)
+\end{equation}
+In the Multinomial Logistic Regression, a common choice for the hypothesis function is the following:
+\begin{equation}
+h_\theta=\frac{1}{\sum_{j=1}^{K}{exp\left(\theta^{(j)^\top}x\right)}}\begin{bmatrix}exp\left(\theta^{(1)\top}x\right)  \\ \vdots \\ exp\left(\theta^{(K)\top}x\right) \end{bmatrix}
+\end{equation}
+where the weights $\omega = \theta = (\theta^{(1)}, ..., \theta^{(K)}) \in R^{d_{x}}$. \\
+Using this function, the solution of the problem is given by finding:
+\begin{equation}
+\theta^*=\arg\min_\theta -\sum_{i=1}^{N}{g_i(\theta)}
+\end{equation}
+with
+\begin{equation}
+g_i\left(\theta\right):=\sum_{k=1}^{K}{1\{y^{(i)}=e_k\}\log{\left( \frac{exp(\theta^{(k)^\top}x^{(i)})}{\sum_{k=1}^{K}{exp( \theta^{(j)^\top}x )}} \right)}}
+\end{equation}
+where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION:2}
+
+\subsection {Pseudocode} \label{Subsec1.1.3}
+\begin{algorithm}
+\caption{}
+\begin{algorithmic} [1]
+\State \textit{Stop Rules:}
+\State $\left|\left|x_{k+1} - x_k\right|\right|  \leq \varepsilon \qquad \varepsilon$ fixed
+\State Number of maximum iterations reached
+\State \textbf{Start:}
+\State Fix initial conditions for each node $x_i(0) = [0 \quad ... \quad 0]^T$
+\State Define the Adjancency Matrix, Weights Matrix, $\alpha^i = \alpha$ constant for each iteration
+\While{No stop rule is true, each node $i$ does:} 
+	\State calculate $\nabla f_i$
+	\For {each neighbor j}
+		\State $x_i(k+1) = x_i(k+1) + a^i_j(k) x^j(k)$
+	\EndFor
+	\State $x_i(k+1) = x_i(k+1) - \alpha \nabla f_i$
+\EndWhile
+\State \textbf{Result:}
+\State Each node $i$ should converge to $x^*$
+\State The minimum of function is $\sum \limits_{i=1}^{m}f_i(x^*)$
+\end{algorithmic}
+\end{algorithm}
+
+
+\section {Code Implementation} \label{Sec1.2}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%% CAPITOLO  %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Chapter 2 Implementation Problem}
-Second chapter for description of the results (simulations and experiments where
-applicable).
-\section{Section title}
-\subsection {Subsection title}
+\chapter{Chapter 2 Results of simulations} \label{Cap2}
+The software described in the previous chapter was used to solve a Multinomial Logistic Regression problem. Specifically, we classified the data of the Iris Dataset.
 
-Citation \cite{CITATION:2}
+\section{Dataset, graph description and minimization function} \label{Sec2.1}
+This dataset is composed of 150 instances, 120 used for training, the rest for tests.\\
+The instances contain 3 classes, each representing a type of Iris flower. Every instance has 4 features, sepal length, sepal width, petal length, petal width expressed in $cm$.\\
+We tried different types of graphs. These graphs are all strongly connected and the weight matrices for the nodes are doubly stochastic, as per the assumptions of convergence of the algorithm described in Chapter \ref{Cap1}.\\
+The results discussed in this chapter, if not differently noted, refer to cyclic graphs with a variable number of nodes.\\
+The program can minimize all kinds of loss functions. As shown in Chapter \ref{Sec1.2}, the quadratic and exponential functions can also be used. These last 2 functions don't guarantee useful results and/or convergence. The minimization function used in this chapter is the one described in Chapter \ref{Subsec1.1.2}, softmax.
+
+\section{Performance} \label{Sec2.2}
+There are some key factors that influence \textit{the computational time}, \textit{the numbers of iterations necessary} and \textit{the accuracy of the results}.\\
+
+\subsection{Number of nodes} \label{Subsec2.2.1}
+The Python program, thanks to the MPI platform, is capable of running on an arbitrary number of nodes. It was tested on as little as 2 nodes to as many as 60 nodes, which means that every node was processing the data of 2 instances (120 instances divided into 60 nodes). The best performances are obtained when the number of nodes corresponds to the number of physical cores of the machine where it runs. When the number of nodes exceeds greatly the number of physical cores, the resources are oversubscribed. In this case, the performances degrade notably as the nodes compete for cache and memory and the processors' schedulers are put in a difficult situation. On a 4-core test machine, a computation with 5000 iterations and 30 nodes is done in 5 minutes. The same machine can do the same number of iterations, but with 60 nodes, in 15 minutes. Therefore, the following tests will be shown on a 4 nodes setup. \\
+
+\subsection{Epsilon} \label{Subsec2.2.2}
+This is a small constant used as stop condition. If the result of the current calculation differs less than epsilon from the previous, the algorithm is stopped.
+
+\subsection{Learning rate} \label{Subsec2.2.3}
+
+\subsection{Fixed step-size} \label{Subsec2.2.4}
+The step-size alpha plays a big role in the speed of convergence of the algorithm. There are 3 kinds of step-size. Fixed, diminishing and adaptive (Armijo). For reasons not discussed in this paper, it's not possible to use Armijo rule in a distributed problem. We will first deal with a simpler fixed step-size. With an epsilon equal to 0.001 (10-3):\\
+\begin{tabularx}{\textwidth}{|X|X|X|X|}
+%{\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Value of fixed step-size} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o.30}\\
+\hline
+0.5 & Not converging & & \\
+\hline
+0.1 & $>$50000 & $>$80 & 1\\
+\hline
+0.05 & $>$50000 & $>$80 & 1\\
+\hline
+0.01 & 2000 & 3 & 1\\
+\hline
+0.005 & 1600 & 2.4 & 1\\
+\hline
+0.001 & 2000 & 3.2 & 0\\
+\hline
+0.0005 & 1600 & 2.4 & 2\\
+\hline
+0.0001 & 500 & 0.8 & 13\\
+\hline
+\end{tabularx}
+%\end{tabular}
+\\ \\
+These results show a general truth about the step-size. If it is too little the learning process proceeds in a very slow way and it requires a huge amount of iterations. If the learning rate is too high and the gradient descent most probably will overshoot the minimum and not converges. Through trial and error, the step-size 0.001 was identified which allow reaching good performance and accuracy. In fact, in only 2.6 seconds, we can make predictions with no errors, using our 30 instances test dataset.
+
+\subsection{Diminishing step-size} \label{Subsec2.2.5}
+The diminishing step-size implemented in the code is in this form:\\
+%\begin{equation}
+%\alpha = const \dot \left( \frac{1}{tt} \right) exp(MATLAB)
+%\end{equation}
+Again, several tests were run by tweaking the constant and the exponent.\\ \\
+\begin{tabularx}{\textwidth}{|X|X|X|X|X|}
+\hline
+\textbf{Alpha\_const} & \textbf{Alpha\_exp} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o. 30}\\
+\hline
+1 & 0.01 & 96 & 0.14 & 13\\
+\hline
+1 & 0.1 & 132 & 0.25 & 1\\
+\hline
+0.1 & 0.01 & 1300 & 1.9 & 1\\
+\hline
+0.1 & 0.1 & $>$50000 & $>$80 & 1\\
+\hline
+0.01 & 0.01 & 1900 & 3.2 & 1\\
+\hline
+0.01 & 0.1 & $>$50000 & $>$80 & 1\\
+\hline
+\end{tabularx}
+\\ \\
+\noindent The best result is obtained in only 132 iterations, with 1 and 0.1 as constant and exponent respectively. This is done in roughly a quarter of a second, obtaining only one error. The accuracy is worst then the previous result, but this is obtained in a fraction of the time needed to obtain 0 error with a fixed step-size. A difference of 2 or 3 seconds may not matter using the Iris Dataset, with a small amount of calculations. In a setup where a bigger number of calculations and bigger dataset are involved, one may prefer this slightly less accurate but faster approach. This graphs show the difference of the value calculated with the distributed algorithm and the...
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,6 +219,8 @@ Citation \cite{CITATION:2}
 %%%%% SVILUPPI FUTURI %%%%%%
 \chapter*{Conclusions} % and future developments}
 \addcontentsline{toc}{chapter}{Conclusions} %  and future developments}
+In this work it has been resolved a Multinomial Logistic Regression problem using MPI in Python. Each agent used a Distributed Sub-gradient method to update its own estimate of optimal solution.
+%% Tutte le considerazioni finali sintetiche si fanno in base alla tabella dei risultati del capitolo 2.
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % %%%% APPENDIX %%%%%
