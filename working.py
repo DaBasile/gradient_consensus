@@ -83,13 +83,14 @@ if len(sys.argv) >= 4:
                     sys.exit(usage_message)
 
             elif sys.argv[7] == "-e":
-                epsilon = float(sys.argv[7])
+                epsilon = float(sys.argv[8])
 
-                if len(sys.argv) >= 10 and sys.argv[9] == "-k":
-                    number_of_inn_connection = int(sys.argv[10])
+                if len(sys.argv) >= 10:
+                    if sys.argv[9] == "-k":
+                        number_of_inn_connection = int(sys.argv[10])
 
-                else:
-                    sys.exit(usage_message)
+                    else:
+                        sys.exit(usage_message)
 
             else:
                 sys.exit(usage_message)
@@ -345,5 +346,4 @@ if rank == 0:
 
     plt.pause(20)
     input("Press [enter] to continue.")
-    # print("Wrong predicted values: ", wrong_answers, "/", len(to_find))
 
