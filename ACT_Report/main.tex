@@ -64,7 +64,7 @@ In this report, it will be shown how to solve a Multinomial Logistic Regression 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
-In the past there was a single \textit{Mainframe} that executed all digital operations. Years after, with the creation of the Personal Computer, more people could execute the same operations in private. Today's \textit{Microcontrollers} allow to make smart an in finity of devices. More algorithms have been created to connect these devices to distribute.\\
+In the past there was a single \textit{Mainframe} that executed all digital computations. Years after, with the creation of the Personal Computer, more people could execute the same operations in private. Today's \textit{Microcontrollers} allow to make smart an infinity of devices. More algorithms have been created to connect these devices to distribute.\\
 This work implements a scenario in which there are some agents that estimate a cost function using their own information and those of the other agents; they use a \textit{Distributed Sub-gradient Method} to update their own estimate and, in particular, they resolve a \textit{Multinomial Logistic Regression}. After some test in \textit{MATLAB}, it is used \textit{MPI} implemented with \textit{Python}.\\
 The present work is divided into two chapters. In Chapter 1, it is introduced the theory behind the problem and it is visualized and commented the implementation code. In Chapter 2 there are the results of simulations with some considerations.
 % \section*{Organization}
@@ -74,29 +74,28 @@ The present work is divided into two chapters. In Chapter 1, it is introduced th
 %%%%%%%%% CAPITOLO  %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Chapter 1 Problem and its implementation} \label{Cap1}
-First-chapter for problem set-up and description of the implemented solution. 
 
 \section{Theory of the problem} \label{Sec1.1}
 \subsection {Distributed Subgradient Methods for Multi-Agent Optimization} \label{Subsec1.1.1}
-In this problem there are $m$ agents that cooperatively minimize a common additive cost. The optimization general problem is:\\
+In this problem there are $m$ agents that cooperatively minimize a common additive cost. The general optimization problem is:\\
 \begin{equation} \label{costfunct}
 minimize \quad \sum\limits_{i=1}^{m} f_{i} \left( x \right) \qquad subject \ to \quad x \in \mathbb{R}^n,
 \end{equation}
-where $f_i : \mathbb{R}^n \longrightarrow \mathbb{R}$ is the cost function of agent $i$, known by this agent only, and $x \in \mathbb{R}$ is a decision vector. It is assumes that:
+where $f_i : \mathbb{R}^n \longrightarrow \mathbb{R}$ is the cost function of agent $i$, known only by this agent, and $x \in \mathbb{R}$ is a decision vector. It is assumed that:
 \begin{itemize} 
-\item The cost function is convex;
+\item the cost function is convex;
 \item the agents are distributed over a time-varying topology;
-\item the graph $\left(V,E_\infty\right)$ is connected, where $E_\infty$ is the set of edges $\left(j,i\right)$ representing agent pairs communicating directly infinitely many times;
+\item the graph $\left(V,E_\infty\right)$ is connected, where $E_\infty$ is the set of edges $\left(j,i\right)$ representing agent pairs communicating directly an indefinite number of times;
 \item there isn't communication delay.
 \end{itemize} 
-Every agent $i$ generates and maintains estimates of the optimal decision vector based on information concerning its own cost function and exchanges this estimate with its directly neighbors at discrete times $t_0, t_1, t_2, ...$. Moreover, each agent $i$ has a vector of weights $a^i(k) \in \mathbb{R}^m$ at any time $t_k$; for each time, the scalar $a_i^j(k)$ is zero if the agent $i$ doesn't directly comunicate with $j$, else it is the weight assigned from the agent $i$ to the information $x^j$ obtained from $j$ during the time interval $(t_k,t_{k+1})$. The estimates are updated according to the update rule:
+Every agent $i$ generates and maintains estimates of the optimal decision vector based on information concerning its own cost function and exchanges this estimate with its directly neighbors at discrete times $t_0, t_1, t_2, ...$. Moreover, each agent $i$ has a vector of weights $a^i(k) \in \mathbb{R}^m$ at any time $t_k$; the scalar $a_i^j(k)$ is zero if the agent $i$ doesn't directly communicate with $j$, else it is the weight assigned from the agent $i$ to the information $x^j$ obtained from $j$ during the time interval $(t_k,t_{k+1})$. The estimates are updated according to the update rule:
 \begin{equation} \label{update}
 x^i\left(k+1\right) = \sum_{j=1}^{m}{a_j^i\left(k\right)x^i\left(k\right)-a^i\left(k\right)d_i\left(k\right)}
 \end{equation}
-where $\alpha^i(k)>0$ is the (diminishing) stepsize used by agent $i$ and the vector $d_i(k)$ is a subgradient of agent $i$ objective function $f_i(x)$ at $x=x^i(k)$. \cite{CITATION:1}
+where $\alpha^i(k)>0$ is the stepsize used by agent $i$ and the vector $d_i(k)$ is a subgradient of agent $i$ objective function $f_i(x)$ at $x=x^i(k)$. \cite{CITATION:1}
 
 \subsection {Multinomial Logistic Regression} \label{Subsec1.1.2}
-The problem to be solved is a Supervised Learning problem called Multinomial Logistic Regression, also known as Softmax Regression, and it generalizes the more common Logistic Regression. The difference between them is that in the latter there are several classes to be considered, in the matter, there are only two classes (or equivalently a binary class).\\
+The problem to be solved is a Supervised Learning problem called Multinomial Logistic Regression, also known as Softmax Regression, and it generalizes the more common Logistic Regression. The difference between them is that in the former there are several classes to be considered, in the latter, there are only two classes (or equivalently a binary class).\\
 The problem to be solved is to find a set of coefficients based on a given dataset to predict the belonging class for an unseen set of features, while minimizing a cost function. The dataset is composed of \textit{N} labelled examples $\{(x^{(1)}, y^{(1)}), ..., (x^{(N)}, y^{(N)})\}$. Each $x^{(i)} \in R^{d_{x}}$ for $i=1, ..., N$ is composed of some features which represent the value upon which we base the estimation of the belonging class, while $y^{(i)} \in R^{d_{y}}$ is the belonging class for the \textit{i-th} example, and can be a values in $\{1, ..., K\}$.
 
 Given a single training example $(x^{(i)}, y^{(i)})$, the definition of the cost function is:
@@ -135,7 +134,7 @@ where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION
 \State Number of maximum iterations reached
 \State \textbf{Start:}
 \State Fix initial conditions for each node $x_i(0) = [0 \quad ... \quad 0]^T$
-\State Define the Adjancency Matrix, Weights Matrix, $\alpha^i = \alpha$ constant for each iteration
+\State Define the Adjacency Matrix, Weights Matrix, $\alpha^i = \alpha$ constant for each iteration
 \While{No stop rule is true, each node $i$ does:} 
 	\State calculate $\nabla f_i$
 	\For {each neighbor j}
@@ -152,16 +151,15 @@ where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION
 
 \section {Code Implementation} \label{Sec1.2}
 
-Here we are defining and explaining what has been implemented in python order to solve the problem. The solution has been implemented using 
-numpy library which computes all vector and matrix operation such as transposition, product, division, summation. Another library used is
-networkx which create and manage connection agent by agent.\\
+Here we are defining and explaining what has been implemented in Python to solve the problem. The solution has been implemented using 
+$numpy$ library which computes all vector and matrix operation such as transposition, product, division, summation. Another library used is
+$networkx$ which creates and manages connection agent by agent.\\
 
 \subsection {create\_matrix.py}
 
-The code implements random integer to create a random matrix to
-compute quadratic functions; warning to warn some reading user that
-can read some invalid value; networkx library to create directed graph
-with its edges; numpy library to compute some matrix operation.
+The code generates random integers to create a random matrix to
+compute quadratic functions; $warning$ warns about reading invalid values; $networkx$ library is used to create the directed graph
+with its edges; $numpy$ library computes some matrix operations.
 \begin{lstlisting}
 from random import randint
 from warnings import warn
@@ -171,21 +169,21 @@ import numpy as np
 
 
 The \textit{createAdjM} function create a communication graph using world\_d as number of
-mpi agents, n\_edges  setted by default as 1 if it is not given or
-bigger than number of agent, phi that is simply a phase inserted into
-graph which just shift the connection, by default is 0. The first for
-cycle set the number of agents that the system has, then edges are
+mpi agents, n\_edges  setted by default as 1 (if it is not given or
+bigger than number of agent), phi that is simply a phase inserted into
+graph which just shift the connection, by default is 0. The first $for$
+cycle sets the number of agents that the system has, then edges are
 computed as follows:
 \begin{itemize}
     \item The sum j + k + phi + 1 means the position of edge in the
-    graph where item j is the current raw, k is the count of agent 
+    graph where item j is the current row, k is the count of agent 
     that the agent j will send a message, phi is the phase and just
     shift the agent that j will send a message and the "+1" 
 
-    \item The "if e $>=$ world\_d" istruction check if the sum is over the number of
-    agents and if is true just subtract this one
+    \item The instruction $ if \ e >= world\_d $  check if the sum is over the number of
+    agents and if is true just subtracts this one
 
-    \item Instead "if e $==$ j" remove the ipotetical self loop unecessary .
+    \item Instead $ if \ e \ $==$ \  j $ removes the ipotetical unnecessary self loop.
 \end{itemize}
 
 \begin{lstlisting}
@@ -233,7 +231,7 @@ def createAdjM(world_d, n_edges=None, phi=None):
     return g
 \end{lstlisting}
 
-\textit{createR} function create a random vector, to compute quadratic function, for each agent. This is used only for quadratic optimization.
+\textit{createR} function creates a random vector, to compute the quadratic function, for each agent. This is used only for quadratic optimization.
 
 \begin{lstlisting}
 def createR(d):
@@ -245,7 +243,7 @@ def createR(d):
     return r
 \end{lstlisting}
 
-\textit{createQ} function create a random matrix, to compute quadratic function, for each agent. This is used only for quadratic optimization.
+\textit{createQ} function creates a random matrix, to compute quadratic function, for each agent. This is used only for quadratic optimization.
 
 \begin{lstlisting}
 def createQ(d):
@@ -265,19 +263,19 @@ def createQ(d):
 
 \subsection{functions.py}
 
-This file has the gradient and loss functions for softmax regression, quadratic and exponential. The softmax regression is the implemented function
-that has the task to compute the machine learning algorithm.
+This file has the gradient and loss functions for softmax regression, quadratic and exponential. The softmax regression is the  function
+that computes the machine learning algorithm.
 
 \begin{lstlisting}
 import numpy as np
 \end{lstlisting}
 
-\textit{loss\_softmax} get as parameter the current state(\textit{all\_theta}), the cardinality of iris set (\textit{category\_count}), the agent
-dataset (\textit{personal\_dataset}) and at least \textit{CONSTANT\_TO\_SUBTRACT}, is a constant to prevent overflow.\\
+\textit{loss\_softmax} gets as parameter the current state(\textit{all\_theta}), the cardinality of iris set (\textit{category\_count}), the agent
+dataset (\textit{personal\_dataset}) and a \textit{CONSTANT\_TO\_SUBTRACT}, a constant to prevent overflow.\\
 The algorithm wants to calculate the $\displaystyle\sum_{i=0}^{number\_of\_agents} f_{i}(x)$ and this function calculate the agent \textit{i}
-$f(x)$. This can be done as follows: for every raw in the personal dataset, the algorithm compute the denominator that is the sum over all
-exponential. Then compute category by category raw by raw the logarithm of ratio between the sum previously calculated and the exponential of raw.
-After that there's the summation of all elements calculated.
+$f(x)$. This can be done as follows: for every row in the personal dataset, the algorithm computes the denominator that is the sum over all
+exponential. Then it computes, category by category, row by row, the logarithm of ratio between the sum previously calculated and the exponential of the row.
+After that, there's the summation of all calculated elements.
 
 \begin{lstlisting}
 def loss_softmax(all_theta, category_count, personal_dataset, CONSTANT_TO_SUBTRACT):
@@ -331,16 +329,16 @@ def gradient_softmax(all_theta, category_count):
 
 In this file is implemented the main algorithm where the consensus and the minimization is calculated.\\
 
-To implement the consensus and minimization this import are needed:
+To implement the consensus and minimization these libraries are needed:
 \begin{itemize}
     \item \textit{mpi4py} is the mpi library for python which generates parallel simulated agent that compute all calculus.
     \item \textit{numpy} that implements matrix/vector computation
-    \item \textit{matplotlib} which is the one whose cares about plotting results
+    \item \textit{matplotlib} is the one that plots the results
     \item \textit{functions and create\_matrix} that are the previous file exposed
     \item \textit{time} that is needed to calculate the computational time of algorithm 
 \end{itemize} 
 
-Then complete iris training set is loaded, and environment variable are setted, as the number of agents, the name of $agent_{i}$.
+Then the complete iris training set is loaded, and environment variables are setted, as the number of agents, the name of $agent_{i}$.
 
 \begin{lstlisting}
 from mpi4py import MPI
@@ -360,7 +358,7 @@ agents_number = world.Get_size()
 rank = world.Get_rank()
 \end{lstlisting}
 
-Here are defined max number of iteration; dimensions is an array of [number of category, number of variables].
+Here it is defined the maximum number of iterations; dimensions is an array of [number of category, number of variables].
 
 \begin{lstlisting}
 """ Define variables """
@@ -369,7 +367,7 @@ category_n = 3
 dimensions = [category_n, 4]
 \end{lstlisting}
 
-Then the dataset has been reparted in equal part to all agent and each one get's its one and print how many raw has.
+Then the dataset is splitted equal parts to all agents and each one gets its one and print how many row it has.
 
 \begin{lstlisting}
 # Assign dataset to each agent
@@ -386,10 +384,10 @@ world.Barrier()
 sys.stdout.flush()
 \end{lstlisting}
 
-Every agent create the same communication directed graph with number of agents and number of inn connection. Then state and loss variable are
+Every agent creates the same communication directed graph with number of agents and number of in connection. Then state and loss variable are
 created, setted to 0 of \textit{MAX\_ITERATIONS} size. In order to get wighted message, all in-neighbors are found and the variable \textit{weight}
-is setted as the average. If the function name inserted is "quadratic" Q and r variables are created randomically. \textit{epsilon\_reached} and 
-\textit{buff} are epsilon checker variable that say to agent when have to leave from loop (if epsilon is reached).
+is setted as the average. If the function name inserted is "quadratic" Q and r variables are created randomly. \textit{epsilon\_reached} and 
+\textit{buff} are epsilon checker variable that say to agent when they have to exit from the loop (if epsilon is reached).
 
 \begin{lstlisting}
 adj = cm.createAdjM(agents_number, number_of_inn_connection)
@@ -419,11 +417,11 @@ ITERATION_DONE = 0
 start_time = time.time()
 \end{lstlisting}
 
-This for cycle calculate consensus. For every iters, is calculated the new "diminishing" alpha; message/messages are sended and received, then
-local variable are weighted. In order to solve consensus to desiderated function, the three implemented one are inserted into an if clause, and the
-right implemented function is called. After that the calculated gradient is multiplied to alpha and then new state is calculated. Then loss
-function is called and if $\left\lVert XX[tt] - XX[tt-1] \right\rVert \leq epsilon$ then buff is true and rank 0 check if all agent has reched
-epsilon condition, if true send a broadcast message with a true value to say to all that the cycle is done.
+This $for$ cycle calculates the consensus. For every $iters$, is calculated the new "diminishing" alpha; message(s) are sent and received, then
+local variable are weighted. In order to solve consensus to desiderated function, the three implemented ones are inserted into an $if$ clause, and the
+right function is called. After that, the calculated gradient is multiplied by alpha and then new state is calculated. Then $loss \
+function$ is called and if $\left\lVert XX[tt] - XX[tt-1] \right\rVert \leq epsilon$ then buff is true and rank 0 check if all agent has reched the
+epsilon condition; if true it sends a broadcast message with a $true$ value to say to all that the cycle is done.
 
 \begin{lstlisting}
 for tt in range(1, MAX_ITERATIONS - 1):
@@ -505,7 +503,7 @@ for tt in range(1, MAX_ITERATIONS - 1):
     ITERATION_DONE = tt
 \end{lstlisting}
 
-When consensus is reached value are printed to user, then all data are sended to rank 0 for centralized calculation
+When consensus is reached, the values are printed to user, then all data are sent to rank 0 for centralized calculations.
 
 \begin{lstlisting}
 print("Parameters of node ", rank)
@@ -519,8 +517,8 @@ if rank != 0:
     world.send(XX, dest=0)
 \end{lstlisting}
 
-After each agent has sent its own data, agent 0, collect and sum all loss function data. Then collect all \textit{ITERATION\_DONE} state of each
-agent in a vector, which has been plotted leter. Before that plot coming out data has been converted into a logaritmic form.
+After each agent has sent its own data, agent 0, collect and sum all loss function datas. Then it collects all \textit{ITERATION\_DONE} state of each
+agent in a vector, which will be converted in logarithmic form and plotted.
 
 \begin{lstlisting}
 if rank == 0:
@@ -554,9 +552,8 @@ if rank == 0:
     #plt.pause(100)
 \end{lstlisting}
 
-Here iris trainig is loaded to test if with the theta found are capable to predict the category of iris. An iteration along all iris trainig set
-is launched, then for all category we implement the exponential about the product from the theta founded and current raw of the set. Then data has
-been normalized and then the arg max is cought as predicted value, if it is not the right answer a variable \textit{wrong\_answer} is updated.
+Here iris trainig is loaded to test if with the thetas found are capable to predict the category of iris. An iteration along all iris trainig set
+is launched, then for all category we implement the exponential about the product from the theta founded and current row of the set. Then data is normalized and then the arg max is taken as predicted value,;if it is not the right answer, a variable \textit{wrong\_answer} is updated.
 
 \begin{lstlisting}
 if rank == 0:
@@ -619,9 +616,10 @@ The Python program, thanks to the MPI platform, is capable of running on an arbi
 This is a small constant used as stop condition. If the result of the current calculation differs less than epsilon from the previous, the algorithm is stopped.
 
 \subsection{Learning rate} \label{Subsec2.2.3}
+The step-size alpha plays a big role in the speed of convergence of the algorithm. There are 3 kinds of step-size. Fixed, diminishing and adaptive (Armijo). For reasons not discussed in this paper, it's not possible to use Armijo rule in a distributed problem.
 
 \subsection{Fixed step-size} \label{Subsec2.2.4}
-The step-size alpha plays a big role in the speed of convergence of the algorithm. There are 3 kinds of step-size. Fixed, diminishing and adaptive (Armijo). For reasons not discussed in this paper, it's not possible to use Armijo rule in a distributed problem. We will first deal with a simpler fixed step-size. With an epsilon equal to $0.001 (10^{-3})$:\\
+ We will first deal with a simpler fixed step-size. With an epsilon equal to $0.001 (10^{-3})$:\\
 \begin{tabularx}{\textwidth}{|X|X|X|X|}
 \hline
 \textbf{Value of fixed step-size} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o.30}\\
@@ -663,14 +661,16 @@ The step-size alpha plays a big role in the speed of convergence of the algorith
 %\end{tabularx}
 %%\end{tabular}
 \\ \\
-These results show a general truth about the step-size. If it is too little the learning process proceeds in a very slow way and it requires a huge amount of iterations. If the learning rate is too high and the gradient descent most probably will overshoot the minimum and not converges. Through trial and error, the step-size 0.001 was identified which allow reaching good performance and accuracy. In fact, in only 2.6 seconds, we can make predictions with no errors, using our 30 instances test dataset.
+These results show a general truth about the step-size. If it is too little, the learning process proceeds in a very slow way and it requires a huge amount of iterations. If the learning rate is too high and the gradient descent most probably will overshoot the minimum and it will not converge. Through trial and error, the step-size 0.001 was identified, it allows reaching good performance and accuracy. In fact, in only 2.6 seconds, we can make predictions with no errors, using our 30 instances test dataset.
 
 \subsection{Diminishing step-size} \label{Subsec2.2.5}
-The diminishing step-size implemented in the code is in this form:\\
+The diminishing step-size implemented in the code is in this form:
+TODO: SISTEMARE
+\\
 %\begin{equation}
-%\alpha = const \dot \left( \frac{1}{tt} \right) exp(MATLAB)
+%\alpha = const \dot \left( \frac{1}{tt} \right) exp
 %\end{equation}
-Again, several tests were run by tweaking the constant and the exponent.\\ \\
+Again, several tests were run by tweaking the multiplying constant and the exponent.\\ \\
 \begin{tabularx}{\textwidth}{|X|X|X|X|X|}
 \hline
 \textbf{psi\_coeff} & \textbf{alpha\_exp coefficient} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o. 30}\\
@@ -707,8 +707,11 @@ Again, several tests were run by tweaking the constant and the exponent.\\ \\
 %\end{tabularx}
 \\ \\
 %\noindent The best result is obtained in only 132 iterations, with 1 and 0.1 as constant and exponent respectively. This is done in roughly a quarter of a second, obtaining only one error. The accuracy is worst then the previous result, but this is obtained in a fraction of the time needed to obtain 0 error with a fixed step-size. A difference of 2 or 3 seconds may not matter using the Iris Dataset, with a small amount of calculations. In a setup where a bigger number of calculations and bigger dataset are involved, one may prefer this slightly less accurate but faster approach. This graphs show the difference of the value calculated with the distributed algorithm and the...
-The best result in term of accuracy is done with both parameters set to 0.1. The computation time is similar to the fixed-step size. \textit{Reducing the epsilon to 0.01, allow the program to reach consensus in 604 with parameters 0.01 and 0.1 and zero error.}
+The best result in term of accuracy is achived with both parameters set to 0.1. The computation time is similar to the fixed-step size. \textit{Reducing the epsilon to 0.01, allow the program to reach consensus in 604 with parameters 0.01 and 0.1 and zero error.}
 
+TODO: VEDERE QUALE PARTE LASCIARE
+
+TODO: GRAFICI
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%% SVILUPPI FUTURI %%%%%%
