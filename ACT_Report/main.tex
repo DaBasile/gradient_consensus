@@ -15,8 +15,26 @@
 \usepackage{algpseudocode}
 \usepackage{tabularx}
 \usepackage{comment}
+\usepackage{listings}
+\usepackage[svgnames]{xcolor}
 
-
+\lstset{ 
+    backgroundcolor=\color{white},   
+    basicstyle=\scriptsize\rmfamily,        
+    breaklines=true,                 
+    captionpos=b,           
+    numbers=left,
+    numberstyle=\tiny\color{Gray},         
+    commentstyle=\color{Green},  
+    escapeinside={\%*}{*)},          
+    keywordstyle=\color{Blue},       
+    stringstyle=\color{Black},  
+    frameround=ftff,
+    language=python,  
+    frame=single,
+    belowcaptionskip=3em,
+    belowskip=2em,
+}
 
 
 \begin{document}
@@ -133,6 +151,452 @@ where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION
 
 
 \section {Code Implementation} \label{Sec1.2}
+
+Here we are defining and explaining what has been implemented in python order to solve the problem. The solution has been implemented using 
+numpy library which computes all vector and matrix operation such as transposition, product, division, summation. Another library used is
+networkx which create and manage connection agent by agent.\\
+
+\subsection {create\_matrix.py}
+
+The code implements random integer to create a random matrix to
+compute quadratic functions; warning to warn some reading user that
+can read some invalid value; networkx library to create directed graph
+with its edges; numpy library to compute some matrix operation.
+\begin{lstlisting}
+from random import randint
+from warnings import warn
+import networkx as nx
+import numpy as np
+\end{lstlisting}
+
+
+The \textit{createAdjM} function create a communication graph using world\_d as number of
+mpi agents, n\_edges  setted by default as 1 if it is not given or
+bigger than number of agent, phi that is simply a phase inserted into
+graph which just shift the connection, by default is 0. The first for
+cycle set the number of agents that the system has, then edges are
+computed as follows:
+\begin{itemize}
+    \item The sum j + k + phi + 1 means the position of edge in the
+    graph where item j is the current raw, k is the count of agent 
+    that the agent j will send a message, phi is the phase and just
+    shift the agent that j will send a message and the "+1" 
+
+    \item The "if e $>=$ world\_d" istruction check if the sum is over the number of
+    agents and if is true just subtract this one
+
+    \item Instead "if e $==$ j" remove the ipotetical self loop unecessary .
+\end{itemize}
+
+\begin{lstlisting}
+def createAdjM(world_d, n_edges=None, phi=None):
+
+    if n_edges is None:
+        n_edges = 1
+
+    if n_edges > world_d or n_edges == 0:
+        warn("Invalid n_edges entered... Setting to 1")
+        n_edges = 1
+
+    if phi is None:
+        phi = 0
+
+    if phi > world_d - 1:
+        warn("Invalid phi entered... Setting to 0")
+        phi = 0
+
+    g = nx.DiGraph()
+
+    for i in range(0, world_d):
+        g.add_node(i)
+
+    for j in range(0, world_d):
+
+        for k in range(0, n_edges):
+
+            e = j + k + phi + 1
+
+            if e >= world_d:
+                e = e - world_d
+
+                if e == j:
+                    e = e + 1
+
+                    if e >= world_d:
+                        e = e - world_d
+
+                g.add_edge(j, e)
+
+            else:
+                g.add_edge(j, e)
+
+    return g
+\end{lstlisting}
+
+\textit{createR} function create a random vector, to compute quadratic function, for each agent. This is used only for quadratic optimization.
+
+\begin{lstlisting}
+def createR(d):
+    r = np.zeros((d, 1))
+
+    for i in range(0, d):
+        r[i] = randint(0, 1)
+
+    return r
+\end{lstlisting}
+
+\textit{createQ} function create a random matrix, to compute quadratic function, for each agent. This is used only for quadratic optimization.
+
+\begin{lstlisting}
+def createQ(d):
+    q = np.zeros((d, d))
+    eye = np.identity(d)
+
+    for i in range(0, d):
+
+        for j in range(0, d):
+            q[i][j] = randint(0, 2)
+
+    a = np.add(q, np.transpose(q))
+    a = np.add(a, np.dot(d, eye))
+
+    return a
+\end{lstlisting}
+
+\subsection{functions.py}
+
+This file has the gradient and loss functions for softmax regression, quadratic and exponential. The softmax regression is the implemented function
+that has the task to compute the machine learning algorithm.
+
+\begin{lstlisting}
+import numpy as np
+\end{lstlisting}
+
+\textit{loss\_softmax} get as parameter the current state(\textit{all\_theta}), the cardinality of iris set (\textit{category\_count}), the agent
+dataset (\textit{personal\_dataset}) and at least \textit{CONSTANT\_TO\_SUBTRACT}, is a constant to prevent overflow.\\
+The algorithm wants to calculate the $\displaystyle\sum_{i=0}^{number\_of\_agents} f_{i}(x)$ and this function calculate the agent \textit{i}
+$f(x)$. This can be done as follows: for every raw in the personal dataset, the algorithm compute the denominator that is the sum over all
+exponential. Then compute category by category raw by raw the logarithm of ratio between the sum previously calculated and the exponential of raw.
+After that there's the summation of all elements calculated.
+
+\begin{lstlisting}
+def loss_softmax(all_theta, category_count, personal_dataset, CONSTANT_TO_SUBTRACT):
+    the_sum = 0
+
+    for index in range(0, len(personal_dataset)):
+        denominator = 0
+
+        for theta in all_theta:
+            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][0:4]) - CONSTANT_TO_SUBTRACT)
+
+        for category in range(0, category_count):
+
+            if category == personal_dataset[index][4]:
+                _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
+                _log = np.log(np.divide(_exp, denominator))
+                the_sum = the_sum - _log
+
+    return the_sum
+\end{lstlisting}
+
+\textit{gradient\_softmax} This is the gradient of softmax equation, that has the same concept as the function mentioned before: calculate in a
+first time se sum of all exponential theta and then sum for each coefficient, subtract from one that coefficient and finally subtract the dataset
+normalized with that to the respective theta.
+
+\begin{lstlisting}
+def gradient_softmax(all_theta, category_count):
+
+    thetas = np.zeros(dimensions)
+
+    for index in range(0, len(personal_dataset)):
+        denominator = 0
+
+        for theta in all_theta:
+            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
+
+        for category in range(0, category_count):
+            coeff = 0
+
+            if category == personal_dataset[index][4]:
+                coeff = 1
+
+            _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
+            coeff = coeff - np.divide(_exp, denominator)
+            thetas[category] = thetas[category] - ((1/len(personal_dataset)) * np.multiply(personal_dataset[index][:4], coeff))
+
+    return thetas
+\end{lstlisting}
+
+\subsection {working.py}
+
+In this file is implemented the main algorithm where the consensus and the minimization is calculated.\\
+
+To implement the consensus and minimization this import are needed:
+\begin{itemize}
+    \item \textit{mpi4py} is the mpi library for python which generates parallel simulated agent that compute all calculus.
+    \item \textit{numpy} that implements matrix/vector computation
+    \item \textit{matplotlib} which is the one whose cares about plotting results
+    \item \textit{functions and create\_matrix} that are the previous file exposed
+    \item \textit{time} that is needed to calculate the computational time of algorithm 
+\end{itemize} 
+
+Then complete iris training set is loaded, and environment variable are setted, as the number of agents, the name of $agent_{i}$.
+
+\begin{lstlisting}
+from mpi4py import MPI
+import create_matrix as cm
+import numpy as np
+import matplotlib.pyplot as plt
+import sys
+import functions as func
+import time
+
+
+dataset = np.loadtxt('iris_training_complete.txt', delimiter=';', dtype=float)
+
+""" Define world parameter, these have been got from mpi system """
+world = MPI.COMM_WORLD
+agents_number = world.Get_size()
+rank = world.Get_rank()
+\end{lstlisting}
+
+Here are defined max number of iteration; dimensions is an array of [number of category, number of variables].
+
+\begin{lstlisting}
+""" Define variables """
+MAX_ITERATIONS = 10000
+category_n = 3
+dimensions = [category_n, 4]
+\end{lstlisting}
+
+Then the dataset has been reparted in equal part to all agent and each one get's its one and print how many raw has.
+
+\begin{lstlisting}
+# Assign dataset to each agent
+dataset_portion = len(dataset) / agents_number
+start_dataset = rank * dataset_portion
+end_dataset = (rank * dataset_portion) + dataset_portion
+start_dataset = int(start_dataset)
+end_dataset = int(end_dataset)
+personal_dataset = dataset[start_dataset:end_dataset]
+
+print("Agent ", rank, " got ", len(personal_dataset), " rows of dataset")
+
+world.Barrier()
+sys.stdout.flush()
+\end{lstlisting}
+
+Every agent create the same communication directed graph with number of agents and number of inn connection. Then state and loss variable are
+created, setted to 0 of \textit{MAX\_ITERATIONS} size. In order to get wighted message, all in-neighbors are found and the variable \textit{weight}
+is setted as the average. If the function name inserted is "quadratic" Q and r variables are created randomically. \textit{epsilon\_reached} and 
+\textit{buff} are epsilon checker variable that say to agent when have to leave from loop (if epsilon is reached).
+
+\begin{lstlisting}
+adj = cm.createAdjM(agents_number, number_of_inn_connection)
+
+x0 = np.ones(dimensions)
+
+XX = np.zeros([MAX_ITERATIONS, *dimensions])
+losses = np.zeros(MAX_ITERATIONS)
+XX[0] = x0
+
+num_of_neighbors = 0
+for in_neighbors in adj.predecessors(rank):
+    num_of_neighbors = num_of_neighbors + 1
+weight = 1 / (num_of_neighbors + 1)  # 1 is for self-loop
+
+world.Barrier()
+
+if function_name == "quadratic":
+    Q = cm.createQ(dimensions[1])
+    r = cm.createR(dimensions[1])
+
+epsilon_reached = False
+buff = False
+
+ITERATION_DONE = 0
+
+start_time = time.time()
+\end{lstlisting}
+
+This for cycle calculate consensus. For every iters, is calculated the new "diminishing" alpha; message/messages are sended and received, then
+local variable are weighted. In order to solve consensus to desiderated function, the three implemented one are inserted into an if clause, and the
+right implemented function is called. After that the calculated gradient is multiplied to alpha and then new state is calculated. Then loss
+function is called and if $\left\lVert XX[tt] - XX[tt-1] \right\rVert \leq epsilon$ then buff is true and rank 0 check if all agent has reched
+epsilon condition, if true send a broadcast message with a true value to say to all that the cycle is done.
+
+\begin{lstlisting}
+for tt in range(1, MAX_ITERATIONS - 1):
+
+    if alpha_type == "diminishing":
+        alpha = psi_coefficient * (1 / tt) ** alpha_coefficient
+    else:
+        alpha = alpha_coefficient
+
+    # Update with my previous state
+    u_i = np.multiply(XX[tt - 1], weight)
+
+    # Send the state to neighbors
+    for node in adj.successors(rank):
+        world.send(XX[tt - 1], dest=node)
+
+    # Update with state of all nodes before me
+    for node in adj.predecessors(rank):
+        u_i = u_i + world.recv(source=node) * weight
+
+    # Go in the opposite direction with respect to the gradient
+    gradient = 0
+
+    if function_name == "softmax":
+        gradient = func.gradient_softmax(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
+
+    elif function_name == "quadratic":
+        gradient = func.gradient_quadratic(XX[tt - 1], category_n, dimensions, personal_dataset, Q, r)
+
+    elif function_name == "exponential":
+        gradient = func.gradient_exponential(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
+
+     #print(gradient)
+
+    grad = np.multiply(alpha, gradient)
+
+    for i in range(0, dimensions[0]):
+        u_i[i] = np.subtract(u_i[i], grad[i])
+
+    # Store  my new state
+    XX[tt] = u_i
+
+    if function_name == "softmax":
+        losses[tt] = func.loss_softmax(XX[tt], category_n, personal_dataset, CONSTANT_TO_SUBTRACT)
+
+    elif function_name == "quadratic":
+        losses[tt] = func.loss_quadratic(XX[tt], category_n, dimensions, personal_dataset, Q, r)
+
+    elif function_name == "exponential":
+        losses[tt] = func.loss_exponential(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
+
+    # Checking epsilon reached condition
+    if np.linalg.norm(np.subtract(XX[tt], XX[tt - 1])) < epsilon:
+        buff = True
+
+    # Rank 0 get all epsilon and check if all reached it
+    buffer = world.gather(buff, root=0)
+
+    # If true it set epsilon reached
+    if rank == 0:
+        if False not in buffer:
+            epsilon_reached = True
+
+    # Send epsilon reached to all agents
+    epsilon_reached = world.bcast(epsilon_reached, root=0)
+
+    # Check if all agent have reached epsilon condition and then exit from loop
+    if epsilon_reached:
+        if rank == 0:
+            print("Exiting at iteration ", tt, "/", MAX_ITERATIONS, "Condition on epsilon reached")
+            sys.stdout.flush()
+
+        break
+
+    if tt in range(0, MAX_ITERATIONS, 100):
+        if rank == 0:
+            print("Iteration ", tt, "/", MAX_ITERATIONS)
+            sys.stdout.flush()
+    ITERATION_DONE = tt
+\end{lstlisting}
+
+When consensus is reached value are printed to user, then all data are sended to rank 0 for centralized calculation
+
+\begin{lstlisting}
+print("Parameters of node ", rank)
+print(XX[ITERATION_DONE - 3])
+
+world.Barrier()
+sys.stdout.flush()
+
+if rank != 0:
+    world.send(losses, dest=0)
+    world.send(XX, dest=0)
+\end{lstlisting}
+
+After each agent has sent its own data, agent 0, collect and sum all loss function data. Then collect all \textit{ITERATION\_DONE} state of each
+agent in a vector, which has been plotted leter. Before that plot coming out data has been converted into a logaritmic form.
+
+\begin{lstlisting}
+if rank == 0:
+
+    # Take the losses from all the other agents and sum
+    # We now have the overall loss given from the cost function
+    for i in range(1, agents_number):
+        agent_loss = world.recv(source=i)
+        losses = np.add(losses, agent_loss)
+
+    XX_agents = np.zeros([agents_number, *[MAX_ITERATIONS, *dimensions]])
+    XX_agents[0] = XX
+    for i in range(1, agents_number):
+        XX_agents[i] = world.recv(source=i)
+
+    log_losses = np.zeros(len(losses))
+    for index in range(0, len(losses)-1):
+        log_losses[index] = np.log(losses[index] - 8.945)
+
+    # Plot cost function logarithmic
+    plt.figure()
+    plt.plot(range(0, ITERATION_DONE - 3), log_losses[0:ITERATION_DONE - 3])
+    plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
+    plt.show()
+
+    # Plot cost function
+    plt.figure()
+    plt.plot(range(0, ITERATION_DONE - 3), losses[0:ITERATION_DONE - 3])
+    plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
+    plt.show()
+    #plt.pause(100)
+\end{lstlisting}
+
+Here iris trainig is loaded to test if with the theta found are capable to predict the category of iris. An iteration along all iris trainig set
+is launched, then for all category we implement the exponential about the product from the theta founded and current raw of the set. Then data has
+been normalized and then the arg max is cought as predicted value, if it is not the right answer a variable \textit{wrong\_answer} is updated.
+
+\begin{lstlisting}
+if rank == 0:
+    to_find = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
+    # to_find = normalize_dataset(to_find)
+    wrong_answers = 0
+    for _set in to_find:
+        _tot_exp = 0
+        _tmp = np.zeros(4)
+        for i in range(0, category_n):
+            val = np.exp(np.dot(XX[ITERATION_DONE - 2][i], _set[0:4]) - CONSTANT_TO_SUBTRACT)
+            _tmp[i] = val
+            _tot_exp = _tot_exp + val
+        _tmp = np.divide(_tmp, _tot_exp)
+        _predicted = np.argmax(_tmp)
+        # print('Predicted: ', _predicted, ', real: ', _set[4])
+        if _predicted != _set[4]:
+            wrong_answers = wrong_answers + 1
+
+    print("Wrong predicted values: ", wrong_answers, "/", len(to_find))
+
+    # Show consensus
+    # for category in range(0, category_n):
+    for component in range(0, 4):
+        figure = plt.figure()
+        for agent in range(0, agents_number):
+            label = "Agent " + str(agent)
+            plt.plot(range(0, ITERATION_DONE), XX_agents[agent][0:ITERATION_DONE, 0, component], label=label)
+        plt.title("Component #" + str(component) + " of each $\Theta_{0}^{i}$")
+        leg = plt.legend(loc='best', ncol=2, mode="expand", shadow=True, fancybox=True)
+        leg.get_frame().set_alpha(0.5)
+        plt.show()
+    print("Iteration done: ", ITERATION_DONE, " Agent number: ", agents_number, "\nEpsilon: ", epsilon,
+          " Const  Alpha: ", alpha_coefficient, " Const Psi ", psi_coefficient,
+          "\nExecution time: ", time.time() - start_time, " Wrong preditions: ", wrong_answers)
+
+    plt.pause(20)
+    input("Press [enter] to continue.")
+\end{lstlisting}
+
 
 
 
