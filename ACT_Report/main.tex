@@ -66,7 +66,7 @@ In this report, it will be shown how to solve a Multinomial Logistic Regression 
 \addcontentsline{toc}{chapter}{Introduction}
 In the past there was a single \textit{Mainframe} that executed all digital computations. Years after, with the creation of the Personal Computer, more people could execute the same operations in private. Today's \textit{Microcontrollers} allow to make smart an infinity of devices. More algorithms have been created to connect these devices to distribute.\\
 This work implements a scenario in which there are some agents that estimate a cost function using their own information and those of the other agents; they use a \textit{Distributed Sub-gradient Method} to update their own estimate and, in particular, they resolve a \textit{Multinomial Logistic Regression}. After some test in \textit{MATLAB}, it is used \textit{MPI} implemented with \textit{Python}.\\
-The present work is divided into two chapters. In Chapter 1, it is introduced the theory behind the problem and it is visualized and commented the implementation code. In Chapter 2 there are the results of simulations with some considerations.
+The present work is divided into two chapters. In Chapter \ref{Cap1}, it is introduced the theory behind the problem and it is visualized and commented the implementation code. In Chapter \ref{Cap2} there are the results of simulations with some considerations.
 % \section*{Organization}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -130,20 +130,20 @@ where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION
 \caption{}
 \begin{algorithmic} [1]
 \State \textit{Stop Rules:}
-\State $\left|\left|x_{k+1} - x_k\right|\right|  \leq \varepsilon \qquad \varepsilon$ fixed
+\State $\left|\left|\theta_{k+1} - \theta_k\right|\right|  \leq \varepsilon \qquad \varepsilon$ fixed
 \State Number of maximum iterations reached
 \State \textbf{Start:}
-\State Fix initial conditions for each node $x_i(0) = [0 \quad ... \quad 0]^T$
+\State Fix initial conditions for each node $\theta_i(0) = [0 \quad ... \quad 0]^T$
 \State Define the Adjacency Matrix, Weights Matrix, $\alpha^i = \alpha$ constant for each iteration
 \While{No stop rule is true, each node $i$ does:} 
 	\State calculate $\nabla f_i$
 	\For {each neighbor j}
-		\State $x_i(k+1) = x_i(k+1) + a^i_j(k) x^j(k)$
+		\State $\theta_i(k+1) = \theta_i(k+1) + a^i_j(k) \theta^j(k)$
 	\EndFor
-	\State $x_i(k+1) = x_i(k+1) - \alpha \nabla f_i$
+	\State $\theta_i(k+1) = \theta_i(k+1) - \alpha \nabla f_i$
 \EndWhile
 \State \textbf{Result:}
-\State Each node $i$ should converge to $x^*$
+\State Each node $i$ should converge to $\theta^*$
 \State The minimum of function is $\sum \limits_{i=1}^{m}f_i(x^*)$
 \end{algorithmic}
 \end{algorithm}
