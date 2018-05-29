@@ -9,9 +9,11 @@ import time
 CONSTANT_TO_SUBTRACT = 15
 
 usage_message = "usage mpiexec -n (number of agent) python3 filename.py -f \"function name\"" \
-                 " optional[-k (number of connection per agent) " \
-                 "-a (alpha type \"diminishing\"/\"constant\") (alpha coefficient) (psi coefficient) " \
-                 "-e (epsilon)]"
+                 " optional[" \
+                 "-k (number of connection per agent) " \
+                 "-a (alpha type: \"diminishing\"/\"constant\") (alpha exp coefficient) (psi coefficient) " \
+                 "-e (epsilon)" \
+                 "-n (normalized [only for softmax])]"
 
 ################################################
 ### Check if all data are inserted correctly ###
@@ -19,114 +21,51 @@ usage_message = "usage mpiexec -n (number of agent) python3 filename.py -f \"fun
 if len(sys.argv) <= 1:
     sys.exit(usage_message)
 
-if sys.argv[1] == "-f":
-    if sys.argv[2] == "softmax" or sys.argv[2] == "quadratic" or sys.argv[2] == "exponential":
-        function_name = str(sys.argv[2])
+for i, arg in enumerate(sys.argv):
 
-    else:
-        sys.exit("admitted function are: \n \"softmax\" \n \"quadratic\" \n")
+    if arg == "-f":
+        if sys.argv[i + 1] == "softmax" or sys.argv[i + 1] == "quadratic" or sys.argv[i + 1] == "exponential":
+            function_name = str(sys.argv[i + 1])
 
-    alpha_type = "diminiscing"
-    alpha_exp_coefficient = 0.01
-    psi_coefficient = 0.01
-    epsilon = 0.01
-    number_of_inn_connection = 1
+        else:
+            sys.exit("admitted function are: \n \"softmax\" \n \"quadratic\" \n \"exponential\"")
 
-else:
-    sys.exit(usage_message)
+        alpha_type = "diminiscing"
+        alpha_exp_coefficient = 0.01
+        psi_coefficient = 0.01
+        epsilon = 0.001
+        number_of_inn_connection = 1
+        normalized = False
 
-if len(sys.argv) >= 4:
-    if sys.argv[3] == "-k":
-        number_of_inn_connection = int(sys.argv[4])
+        if function_name == "exponential":
+            alpha_exp_coefficient = 0.000000000001
+            psi_coefficient = 0.000000001
 
-        if len(sys.argv) >= 6:
-            if sys.argv[5] == "-a":
-                alpha_type = sys.argv[6]
-                alpha_exp_coefficient = float(sys.argv[7])
-                psi_coefficient = float(sys.argv[8])
+    elif arg == "-k":
+        try:
+            number_of_inn_connection = int(sys.argv[i + 1])
+        except (ValueError, IndexError):
+            print("Value error at -k")
+            sys.exit(usage_message)
 
-                if len(sys.argv) >= 10:
-                    if sys.argv[9] == "-e":
-                        epsilon = float(sys.argv[10])
+    elif arg == "-a":
+        try:
+            alpha_type = str(sys.argv[i + 1])
+            alpha_exp_coefficient = float(sys.argv[i + 2])
+            psi_coefficient = float(sys.argv[i + 3])
+        except (ValueError, IndexError):
+            print("Value error at -a")
+            sys.exit(usage_message)
 
-                    else:
-                        sys.exit(usage_message)
+    elif arg == "-e":
+        try:
+            epsilon = float(sys.argv[i + 1])
+        except (ValueError, IndexError):
+            print("Value error at -e")
+            sys.exit(usage_message)
 
-            elif sys.argv[5] == "-e":
-                epsilon = float(sys.argv[6])
-
-                if len(sys.argv) >= 8:
-                    if sys.argv[7] == "-a":
-                        alpha_type = sys.argv[8]
-                        alpha_exp_coefficient = float(sys.argv[9])
-                        psi_coefficient = float(sys.argv[10])
-
-                    else:
-                        sys.exit(usage_message)
-
-            else:
-                sys.exit(usage_message)
-
-    elif sys.argv[3] == "-a":
-        alpha_type = sys.argv[4]
-        alpha_exp_coefficient = float(sys.argv[5])
-        psi_coefficient = float(sys.argv[6])
-
-        if len(sys.argv) >= 8:
-            if sys.argv[7] == "-k":
-                number_of_inn_connection = int(sys.argv[8])
-
-                if len(sys.argv) >= 10 and sys.argv[9] == "-e":
-                    epsilon = float(sys.argv[10])
-
-                else:
-                    sys.exit(usage_message)
-
-            elif sys.argv[7] == "-e":
-                epsilon = float(sys.argv[8])
-
-                if len(sys.argv) >= 10:
-                    if sys.argv[9] == "-k":
-                        number_of_inn_connection = int(sys.argv[10])
-
-                    else:
-                        sys.exit(usage_message)
-
-            else:
-                sys.exit(usage_message)
-
-    elif sys.argv[3] == "-e":
-        epsilon = float(sys.argv[4])
-
-        if len(sys.argv) >= 6:
-            if sys.argv[5] == "-k":
-                number_of_inn_connection = int(sys.argv[6])
-
-                if len(sys.argv) >= 8 and sys.argv[7] == "-a":
-                    alpha_type = sys.argv[8]
-                    alpha_exp_coefficient = float(sys.argv[9])
-                    psi_coefficient = float(sys.argv[10])
-
-                else:
-                    sys.exit(usage_message)
-
-            elif sys.argv[5] == "-a":
-                alpha_type = sys.argv[6]
-                alpha_exp_coefficient = float(sys.argv[7])
-                psi_coefficient = float(sys.argv[8])
-
-                if len(sys.argv) >= 10:
-                    if sys.argv[9] == "-k":
-                        number_of_inn_connection = int(sys.argv[10])
-
-                    else:
-                        sys.exit(usage_message)
-
-            else:
-                sys.exit(usage_message)
-
-    else:
-        sys.exit(usage_message)
+    elif arg == "-n":
+        normalized = True
 
 #########################
 ### START MPI PROGRAM ###
@@ -206,15 +145,14 @@ for tt in range(1, MAX_ITERATIONS - 1):
     gradient = 0
 
     if function_name == "softmax":
-        gradient = func.gradient_softmax(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
+        gradient = func.gradient_softmax(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT,
+                                         normalized)
 
     elif function_name == "quadratic":
         gradient = func.gradient_quadratic(XX[tt - 1], category_n, dimensions, personal_dataset, Q, r)
 
     elif function_name == "exponential":
         gradient = func.gradient_exponential(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
-
-     #print(gradient)
 
     grad = np.multiply(alpha, gradient)
 
@@ -307,8 +245,6 @@ if rank == 0:
     plt.plot(range(0, ITERATION_DONE - 3), losses[0:ITERATION_DONE - 3])
     plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
     plt.show()
-    #plt.pause(100)
-
 
 if rank == 0:
     to_find = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
