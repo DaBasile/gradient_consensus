@@ -365,101 +365,65 @@ This is a small constant used as stop condition. If the result of the current ca
 The step-size alpha plays a big role in the speed of convergence of the algorithm. There are 3 kinds of step-size. Fixed, diminishing and adaptive (Armijo). For reasons not discussed in this paper, it's not possible to use Armijo rule in a distributed problem.
 
 \subsection{Fixed step-size} \label{Subsec2.2.4}
- We will first deal with a simpler fixed step-size. With an epsilon equal to $0.001 (10^{-3})$:\\
-\begin{center}
-    \begin{tabular}{|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{1.5cm}|}
-        \hline
-        \scriptsize{\textbf{Value of fixed step-size}} & \scriptsize{\textbf{Iteration required}} & \scriptsize{\textbf{Execution time in s}} & \scriptsize{\textbf{Wrong guesses o.30}}\\
-        \hline \hline
-        0.5 & 4601 & 6.8 & 1\\
-        \hline
-        0.1 & 2109 & 3.24 & 1\\
-        \hline
-        0.05 & 2342 & 3.68 & 0\\
-        \hline
-        0.01 & 1153 & 2.05 & 2\\
-        \hline
-        0.005 & 680 & 1.14 & 9\\
-        \hline
-        0.001 & 22 & 0.05 & 22\\
-        \hline
-    \end{tabular}\\
-\end{center}
-%\begin{tabularx}{\textwidth}{|X|X|X|X|}
-%%{\begin{tabular}{|c|c|c|c|}
-%\hline
-%\textbf{Value of fixed step-size} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o.30}\\
-%\hline
-%0.5 & Not converging & & \\
-%\hline
-%0.1 & $>$50000 & $>$80 & 1\\
-%\hline
-%0.05 & $>$50000 & $>$80 & 1\\
-%\hline
-%0.01 & 2000 & 3 & 1\\
-%\hline
-%0.005 & 1600 & 2.4 & 1\\
-%\hline
-%0.001 & 2000 & 3.2 & 0\\
-%\hline
-%0.0005 & 1600 & 2.4 & 2\\
-%\hline
-%0.0001 & 500 & 0.8 & 13\\
-%\hline
-%\end{tabularx}
-%%\end{tabular}
+ We will first deal with a simpler fixed step-size. With an epsilon equal to $0.001\  (10^{-3})$:\\
+\begin{tabularx}{\textwidth}{|X|X|X|X|}
+\hline
+\textbf{Value of fixed step-size} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o.30}\\
+\hline
+0.5 & overflow & alpha too big & -\\
+\hline
+0.1 & \textgreater 10000 & \textgreater 15 & 2\\
+\hline
+0.05 & \textgreater 10000 & \textgreater 15 & 1\\
+\hline
+0.01 & 1968 & 2.8 & 1\\
+\hline
+0.005 & 1558 & 2.3 & 1\\
+\hline
+0.001 & 2114 & 3.1 & 0\\
+\hline
+0.0005 & 1619 & 2.3 & 2\\
+\hline
+0.0001 & 527 & 0.7 & 14\\
+\hline
+\end{tabularx}
 
-These results show a general truth about the step-size. If it is too little, the learning process proceeds in a very slow way and it requires a huge amount of iterations. If the learning rate is too high and the gradient descent most probably will overshoot the minimum and it will not converge. Through trial and error, the step-size 0.001 was identified, it allows reaching good performance and accuracy. In fact, in only 2.6 seconds, we can make predictions with no errors, using our 30 instances test dataset.
+\\ \\
+These results show a general truth about the step-size. If it is too little, the learning process proceeds in a very slow way and it requires a huge amount of iterations. If the learning rate is too high, the gradient descent will most probably overshoot the minimum and it will not converge. Through trial and error, the step-size 0.001 was identified, it allows reaching good performance and accuracy. In fact, in only 3.1 seconds, we can make predictions with no errors, using our 30 instances test dataset.
 
 \subsection{Diminishing step-size} \label{Subsec2.2.5}
 The diminishing step-size implemented in the code is in this form:
 TODO: SISTEMARE
 \\
-%\begin{equation}
-%\alpha = const \dot \left( \frac{1}{tt} \right) exp
-%\end{equation}
+\begin{equation}
+\alpha = const \dot \left( \frac{1}{tt} \right) exp
+\end{equation}
 Again, several tests were run by tweaking the multiplying constant and the exponent.\\ \\
-\begin{center}
-    \begin{tabular}{| >{\centering\arraybackslash}m{1.7cm} | >{\centering\arraybackslash}m{1.7cm} | >{\centering\arraybackslash}m{1.7cm} | >{\centering\arraybackslash}m{1.7cm} | >{\centering\arraybackslash}m{1.7cm} |}
-        \hline
-        \scriptsize{\textbf{psi\_coeff}} & \scriptsize{\textbf{alpha\_exp coefficient}} & \scriptsize{\textbf{Iteration required}} & \scriptsize{\textbf{Execution time in s}} & \scriptsize{\textbf{Wrong guesses o. 30}}\\
-        \hline \hline
-        1 & 0.01 & $>$20000 & $>$30 & 13\\
-        \hline
-        1 & 0.1 & 4033 & 6.66 & 1\\
-        \hline
-        0.1 & 0.01 & 2130 & 5.19 & 1\\
-        \hline
-        0.1 & 0.1 & 2028 & 3.07 & 0\\
-        \hline
-        0.01 & 0.01 & 1067 & 1.60 & 2\\
-        \hline
-        0.01 & 0.1 & 628 & 1 & 8\\
-        \hline
-    \end{tabular}\\
-\end{center}
-%\begin{tabularx}{\textwidth}{|X|X|X|X|X|}
-%\hline
-%\textbf{Alpha\_const} & \textbf{Alpha\_exp} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o. 30}\\
-%\hline
-%1 & 0.01 & 96 & 0.14 & 13\\
-%\hline
-%1 & 0.1 & 132 & 0.25 & 1\\
-%\hline
-%0.1 & 0.01 & 1300 & 1.9 & 1\\
-%\hline
-%0.1 & 0.1 & $>$50000 & $>$80 & 1\\
-%\hline
-%0.01 & 0.01 & 1900 & 3.2 & 1\\
-%\hline
-%0.01 & 0.1 & $>$50000 & $>$80 & 1\\
-%\hline
-%\end{tabularx}
+\begin{tabularx}{\textwidth}{|X|X|X|X|X|}
+\hline
+\textbf{psi\_coeff} & \textbf{alpha\_exp coefficient} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o. 30}\\
+\hline
+1 & 0.01 & overflow & - & -\\
+\hline
+1 & 0.1 & overflow & - & -\\
+\hline
+0.1 & 0.01 & \textgreater 10000 & \textgreater 15 & 1\\
+\hline
+0.1 & 0.5 & 349 & 0.5 & 0\\
+\hline
+0.1 & 0.1 & \textgreater 10000 & \textgreater 16 & 1\\
+\hline
+0.01 & 0.01 & 1852 & 2.7 & 1\\
+\hline
+0.01 & 0.1 & 1259 & 1.8 & 1\\
+\hline
+\end{tabularx}
 
-%\noindent The best result is obtained in only 132 iterations, with 1 and 0.1 as constant and exponent respectively. This is done in roughly a quarter of a second, obtaining only one error. The accuracy is worst then the previous result, but this is obtained in a fraction of the time needed to obtain 0 error with a fixed step-size. A difference of 2 or 3 seconds may not matter using the Iris Dataset, with a small amount of calculations. In a setup where a bigger number of calculations and bigger dataset are involved, one may prefer this slightly less accurate but faster approach. This graphs show the difference of the value calculated with the distributed algorithm and the...
-The best result in term of accuracy is achived with both parameters set to 0.1. The computation time is similar to the fixed-step size. \textit{Reducing the epsilon to 0.01, allow the program to reach consensus in 604 with parameters 0.01 and 0.1 and zero error.}
+\\ \\
+\noindent The best result is obtained in only 349 iterations, with 0.1 and 0.5 as multiplicative constant and exponent respectively. This is done in roughly half of a second, obtaining no error. The accuracy is worst then the previous result, but this is obtained in a fraction of the time needed to obtain 0 error with a fixed step-size. A difference of 2 or 3 seconds may not seem important using the Iris Dataset, with a small amount of calculations. In a setup where a bigger number of calculations and bigger dataset are involved, one may appreciate the advantages of this faster approach.
 
-TODO: VEDERE QUALE PARTE LASCIARE
+
+
 
 TODO: GRAFICI
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
