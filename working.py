@@ -6,20 +6,27 @@ import sys
 import functions as func
 import time
 
-CONSTANT_TO_SUBTRACT = 15
-
+CONSTANT_TO_SUBTRACT = 300
 usage_message = "usage mpiexec -n (number of agent) python3 filename.py -f \"function name\"" \
                  " optional[" \
                  "-k (number of connection per agent) " \
                  "-a (alpha type: \"diminishing\"/\"constant\") (alpha exp coefficient) (psi coefficient) " \
                  "-e (epsilon)" \
-                 "-n (normalized [only for softmax])]"
+                 "-n (normalized [only for softmax])" \
+                 "-m (file path to matrix WARNING possibly not doubly stochastic)]"
 
 ################################################
 ### Check if all data are inserted correctly ###
 ################################################
-if len(sys.argv) <= 1:
-    sys.exit(usage_message)
+
+function_name = "softmax"
+alpha_type = "diminiscing"
+alpha_exp_coefficient = 0.01
+psi_coefficient = 0.01
+epsilon = 0.001
+number_of_inn_connection = 1
+normalized = False
+
 
 for i, arg in enumerate(sys.argv):
 
@@ -29,13 +36,6 @@ for i, arg in enumerate(sys.argv):
 
         else:
             sys.exit("admitted function are: \n \"softmax\" \n \"quadratic\" \n \"exponential\"")
-
-        alpha_type = "diminiscing"
-        alpha_exp_coefficient = 0.01
-        psi_coefficient = 0.01
-        epsilon = 0.001
-        number_of_inn_connection = 1
-        normalized = False
 
         if function_name == "exponential":
             alpha_exp_coefficient = 0.000000000001
@@ -73,6 +73,7 @@ for i, arg in enumerate(sys.argv):
 
 # --oversubscribe -n 6
 dataset = np.loadtxt('iris_training_complete.txt', delimiter=';', dtype=float)
+#matrix = np.loadtxt('matrix.txt', delimiter=';', dtype=float)
 
 """ Define world parameter, these have been got from mpi system """
 world = MPI.COMM_WORLD
@@ -133,6 +134,15 @@ for tt in range(1, MAX_ITERATIONS - 1):
     # Update with my previous state
     u_i = np.multiply(XX[tt - 1], weight)
 
+    # for i, j in matrix:
+    #     if matrix[i][j] != 0:
+    #         world.send(XX[tt - 1], dest=j)
+    #
+    # for i, j in matrix:
+    #     print("i = ", i, " j = ", j)
+    #     if matrix[j][i] != 0:
+    #         u_i = u_i + world.recv(source=i) * matrix[j][i]
+
     # Send the state to neighbors
     for node in adj.successors(rank):
         world.send(XX[tt - 1], dest=node)
@@ -143,6 +153,7 @@ for tt in range(1, MAX_ITERATIONS - 1):
 
     # Go in the opposite direction with respect to the gradient
     gradient = 0
+    print(XX[tt-1])
 
     if function_name == "softmax":
         gradient = func.gradient_softmax(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT,
