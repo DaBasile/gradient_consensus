@@ -342,7 +342,6 @@ calculations and plot result.
 
 
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%% CAPITOLO 2 %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -366,10 +365,12 @@ The step-size alpha plays a big role in the speed of convergence of the algorith
 
 \subsection{Fixed step-size} \label{Subsec2.2.4}
  We will first deal with a simpler fixed step-size. With an epsilon equal to $0.001\  (10^{-3})$:\\
-\begin{tabularx}{\textwidth}{|X|X|X|X|}
+\begin{scriptsize}
+\begin{center}
+\begin{tabular}{|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|}
 \hline
 \textbf{Value of fixed step-size} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o.30}\\
-\hline
+\hline\hline
 0.5 & overflow & alpha too big & -\\
 \hline
 0.1 & \textgreater 10000 & \textgreater 15 & 2\\
@@ -386,9 +387,10 @@ The step-size alpha plays a big role in the speed of convergence of the algorith
 \hline
 0.0001 & 527 & 0.7 & 14\\
 \hline
-\end{tabularx}
+\end{tabular} \\
+\end{center}
+\end{scriptsize}
 
-\\ \\
 These results show a general truth about the step-size. If it is too little, the learning process proceeds in a very slow way and it requires a huge amount of iterations. If the learning rate is too high, the gradient descent will most probably overshoot the minimum and it will not converge. Through trial and error, the step-size 0.001 was identified, it allows reaching good performance and accuracy. In fact, in only 3.1 seconds, we can make predictions with no errors, using our 30 instances test dataset.
 
 \subsection{Diminishing step-size} \label{Subsec2.2.5}
@@ -396,13 +398,16 @@ The diminishing step-size implemented in the code is in this form:
 TODO: SISTEMARE
 \\
 \begin{equation}
-\alpha = const \dot \left( \frac{1}{tt} \right) exp
+\alpha = const \left( \frac{1}{tt} \right) exp
 \end{equation}
 Again, several tests were run by tweaking the multiplying constant and the exponent.\\ \\
-\begin{tabularx}{\textwidth}{|X|X|X|X|X|}
+
+\begin{scriptsize}
+\begin{center}
+\begin{tabular}{|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|}
 \hline
-\textbf{psi\_coeff} & \textbf{alpha\_exp coefficient} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o. 30}\\
-\hline
+\scriptsize{\textbf{psi\_coeff}} & \scriptsize{\textbf{alpha\_exp coefficient}} & \scriptsize{\textbf{Iteration required}} & \scriptsize{\textbf{Execution time in s}} & \scriptsize{\textbf{Wrong guesses o. 30}}\\
+\hline \hline
 1 & 0.01 & overflow & - & -\\
 \hline
 1 & 0.1 & overflow & - & -\\
@@ -417,9 +422,10 @@ Again, several tests were run by tweaking the multiplying constant and the expon
 \hline
 0.01 & 0.1 & 1259 & 1.8 & 1\\
 \hline
-\end{tabularx}
+\end{tabular}\\
+\end{center}
+\end{scriptsize}
 
-\\ \\
 \noindent The best result is obtained in only 349 iterations, with 0.1 and 0.5 as multiplicative constant and exponent respectively. This is done in roughly half of a second, obtaining no error. The accuracy is worst then the previous result, but this is obtained in a fraction of the time needed to obtain 0 error with a fixed step-size. A difference of 2 or 3 seconds may not seem important using the Iris Dataset, with a small amount of calculations. In a setup where a bigger number of calculations and bigger dataset are involved, one may appreciate the advantages of this faster approach.
 
 
