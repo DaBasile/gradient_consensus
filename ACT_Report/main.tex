@@ -136,11 +136,11 @@ where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION
 \State Fix initial conditions for each node $\theta_i(0) = [0 \quad ... \quad 0]^T$
 \State Define the Adjacency Matrix, Weights Matrix, $\alpha^i = \alpha$ constant for each iteration
 \While{No stop rule is true, each node $i$ does:} 
-	\State calculate $\nabla f_i$
-	\For {each neighbor j}
-		\State $\theta_i(k+1) = \theta_i(k+1) + a^i_j(k) \theta^j(k)$
-	\EndFor
-	\State $\theta_i(k+1) = \theta_i(k+1) - \alpha \nabla f_i$
+    \State calculate $\nabla f_i$
+    \For {each neighbor j}
+        \State $\theta_i(k+1) = \theta_i(k+1) + a^i_j(k) \theta^j(k)$
+    \EndFor
+    \State $\theta_i(k+1) = \theta_i(k+1) - \alpha \nabla f_i$
 \EndWhile
 \State \textbf{Result:}
 \State Each node $i$ should converge to $\theta^*$
@@ -151,24 +151,15 @@ where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION
 
 \section {Code Implementation} \label{Sec1.2}
 
-Here we are defining and explaining what has been implemented in Python to solve the problem. The solution has been implemented using 
-$numpy$ library which computes all vector and matrix operation such as transposition, product, division, summation. Another library used is
-$networkx$ which creates and manages connection agent by agent.\\
+Here we are defining and explaining what has been implemented in Python to solve the problem. The solution has been
+implemented using: $numpy$ library which computes all vector and matrix operation such as transposition, product, division,
+summation; $networkx$ which creates and manage adjacency matricies for all agent; $matplotlib$ that create and plot result
+which we have cought during test and training phase. At a first time the code check if any parameter are send to every agent,
+then start to create environment, such as get the number of agent, create adjacency matrix and initialize local variable where
+it will save collected data. The weights depends about how many in-neighbors each agent has, because our adjacency matrix is
+setted with k in-neighbors that can be setted when program is launched. \\
 
-\subsection {create\_matrix.py}
-
-The code generates random integers to create a random matrix to
-compute quadratic functions; $warning$ warns about reading invalid values; $networkx$ library is used to create the directed graph
-with its edges; $numpy$ library computes some matrix operations.
-\begin{lstlisting}
-from random import randint
-from warnings import warn
-import networkx as nx
-import numpy as np
-\end{lstlisting}
-
-
-The \textit{createAdjM} function create a communication graph using world\_d as number of
+The adjacency matrix is created by \textit{createAdjM} function, that make a communication graph using world\_d as number of
 mpi agents, n\_edges  setted by default as 1 (if it is not given or
 bigger than number of agent), phi that is simply a phase inserted into
 graph which just shift the connection, by default is 0. The first $for$
@@ -186,96 +177,15 @@ computed as follows:
     \item Instead $ if \ e \ $==$ \  j $ removes the ipotetical unnecessary self loop.
 \end{itemize}
 
-\begin{lstlisting}
-def createAdjM(world_d, n_edges=None, phi=None):
 
-    if n_edges is None:
-        n_edges = 1
-
-    if n_edges > world_d or n_edges == 0:
-        warn("Invalid n_edges entered... Setting to 1")
-        n_edges = 1
-
-    if phi is None:
-        phi = 0
-
-    if phi > world_d - 1:
-        warn("Invalid phi entered... Setting to 0")
-        phi = 0
-
-    g = nx.DiGraph()
-
-    for i in range(0, world_d):
-        g.add_node(i)
-
-    for j in range(0, world_d):
-
-        for k in range(0, n_edges):
-
-            e = j + k + phi + 1
-
-            if e >= world_d:
-                e = e - world_d
-
-                if e == j:
-                    e = e + 1
-
-                    if e >= world_d:
-                        e = e - world_d
-
-                g.add_edge(j, e)
-
-            else:
-                g.add_edge(j, e)
-
-    return g
-\end{lstlisting}
-
-\textit{createR} function creates a random vector, to compute the quadratic function, for each agent. This is used only for quadratic optimization.
-
-\begin{lstlisting}
-def createR(d):
-    r = np.zeros((d, 1))
-
-    for i in range(0, d):
-        r[i] = randint(0, 1)
-
-    return r
-\end{lstlisting}
-
-\textit{createQ} function creates a random matrix, to compute quadratic function, for each agent. This is used only for quadratic optimization.
-
-\begin{lstlisting}
-def createQ(d):
-    q = np.zeros((d, d))
-    eye = np.identity(d)
-
-    for i in range(0, d):
-
-        for j in range(0, d):
-            q[i][j] = randint(0, 2)
-
-    a = np.add(q, np.transpose(q))
-    a = np.add(a, np.dot(d, eye))
-
-    return a
-\end{lstlisting}
-
-\subsection{functions.py}
-
-This file has the gradient and loss functions for softmax regression, quadratic and exponential. The softmax regression is the  function
-that computes the machine learning algorithm.
-
-\begin{lstlisting}
-import numpy as np
-\end{lstlisting}
-
-\textit{loss\_softmax} gets as parameter the current state(\textit{all\_theta}), the cardinality of iris set (\textit{category\_count}), the agent
-dataset (\textit{personal\_dataset}) and a \textit{CONSTANT\_TO\_SUBTRACT}, a constant to prevent overflow.\\
-The algorithm wants to calculate the $\displaystyle\sum_{i=0}^{number\_of\_agents} f_{i}(x)$ and this function calculate the agent \textit{i}
-$f(x)$. This can be done as follows: for every row in the personal dataset, the algorithm computes the denominator that is the sum over all
-exponential. Then it computes, category by category, row by row, the logarithm of ratio between the sum previously calculated and the exponential of the row.
-After that, there's the summation of all calculated elements.
+Loss softmax function,\textit{loss\_softmax} gets as parameter the current state(\textit{all\_theta}), the cardinality of
+iris set (\textit{category\_count}), the agent dataset (\textit{personal\_dataset}) and a \textit{CONSTANT\_TO\_SUBTRACT}, a
+constant to prevent overflow.\\
+The algorithm wants to calculate the $\displaystyle\sum_{i=0}^{number\_of\_agents} f_{i}(x)$ and this function calculate the
+agent \textit{i} $f(x)$. This can be done as follows: for every row in the personal dataset, the algorithm computes the
+denominator that is the sum over all exponential. Then it computes, category by category, row by row, the logarithm of ratio
+between the sum previously calculated and the exponential of the row. After that, there's the summation of all calculated
+elements.
 
 \begin{lstlisting}
 def loss_softmax(all_theta, category_count, personal_dataset, CONSTANT_TO_SUBTRACT):
@@ -297,9 +207,10 @@ def loss_softmax(all_theta, category_count, personal_dataset, CONSTANT_TO_SUBTRA
     return the_sum
 \end{lstlisting}
 
-\textit{gradient\_softmax} This is the gradient of softmax equation, that has the same concept as the function mentioned before: calculate in a
-first time se sum of all exponential theta and then sum for each coefficient, subtract from one that coefficient and finally subtract the dataset
-normalized with that to the respective theta.
+The gradient method implemented here, called \textit{gradient\_softmax} This is the gradient of softmax equation, that has
+the same concept as the function mentioned before: calculate in a first time se sum of all exponential theta and then sum for
+each coefficient, subtract from one that coefficient and finally subtract the dataset normalized with that to the respective
+theta.
 
 \begin{lstlisting}
 def gradient_softmax(all_theta, category_count):
@@ -327,101 +238,24 @@ def gradient_softmax(all_theta, category_count):
 
 \subsection {working.py}
 
-In this file is implemented the main algorithm where the consensus and the minimization is calculated.\\
+In this file is implemented the main algorithm where the consensus and the minimization of loss function is calculated.\\
 
-To implement the consensus and minimization these libraries are needed:
-\begin{itemize}
-    \item \textit{mpi4py} is the mpi library for python which generates parallel simulated agent that compute all calculus.
-    \item \textit{numpy} that implements matrix/vector computation
-    \item \textit{matplotlib} is the one that plots the results
-    \item \textit{functions and create\_matrix} that are the previous file exposed
-    \item \textit{time} that is needed to calculate the computational time of algorithm 
-\end{itemize} 
+The complete iris training set is loaded, and environment variables are setted, as the number of agents, the name of $agent_{i
+}$. Then the dataset is splitted equal parts to all agents and each one gets its one and print how many row it has.
 
-Then the complete iris training set is loaded, and environment variables are setted, as the number of agents, the name of $agent_{i}$.
-
-\begin{lstlisting}
-from mpi4py import MPI
-import create_matrix as cm
-import numpy as np
-import matplotlib.pyplot as plt
-import sys
-import functions as func
-import time
+Every agent creates the same communication directed graph with number of agents and number of in connection. Then state and
+loss variable are created, setted to 0 of \textit{MAX\_ITERATIONS} size. In order to get wighted message, all in-neighbors
+are found and the variable \textit{weight} is setted as the average. If the function name inserted is "quadratic" Q and r
+variables are created randomly. \textit{epsilon\_reached} and \textit{buff} are epsilon checker variable that say to agent
+when they have to exit from the loop (if epsilon is reached).
 
 
-dataset = np.loadtxt('iris_training_complete.txt', delimiter=';', dtype=float)
-
-""" Define world parameter, these have been got from mpi system """
-world = MPI.COMM_WORLD
-agents_number = world.Get_size()
-rank = world.Get_rank()
-\end{lstlisting}
-
-Here it is defined the maximum number of iterations; dimensions is an array of [number of category, number of variables].
-
-\begin{lstlisting}
-""" Define variables """
-MAX_ITERATIONS = 10000
-category_n = 3
-dimensions = [category_n, 4]
-\end{lstlisting}
-
-Then the dataset is splitted equal parts to all agents and each one gets its one and print how many row it has.
-
-\begin{lstlisting}
-# Assign dataset to each agent
-dataset_portion = len(dataset) / agents_number
-start_dataset = rank * dataset_portion
-end_dataset = (rank * dataset_portion) + dataset_portion
-start_dataset = int(start_dataset)
-end_dataset = int(end_dataset)
-personal_dataset = dataset[start_dataset:end_dataset]
-
-print("Agent ", rank, " got ", len(personal_dataset), " rows of dataset")
-
-world.Barrier()
-sys.stdout.flush()
-\end{lstlisting}
-
-Every agent creates the same communication directed graph with number of agents and number of in connection. Then state and loss variable are
-created, setted to 0 of \textit{MAX\_ITERATIONS} size. In order to get wighted message, all in-neighbors are found and the variable \textit{weight}
-is setted as the average. If the function name inserted is "quadratic" Q and r variables are created randomly. \textit{epsilon\_reached} and 
-\textit{buff} are epsilon checker variable that say to agent when they have to exit from the loop (if epsilon is reached).
-
-\begin{lstlisting}
-adj = cm.createAdjM(agents_number, number_of_inn_connection)
-
-x0 = np.ones(dimensions)
-
-XX = np.zeros([MAX_ITERATIONS, *dimensions])
-losses = np.zeros(MAX_ITERATIONS)
-XX[0] = x0
-
-num_of_neighbors = 0
-for in_neighbors in adj.predecessors(rank):
-    num_of_neighbors = num_of_neighbors + 1
-weight = 1 / (num_of_neighbors + 1)  # 1 is for self-loop
-
-world.Barrier()
-
-if function_name == "quadratic":
-    Q = cm.createQ(dimensions[1])
-    r = cm.createR(dimensions[1])
-
-epsilon_reached = False
-buff = False
-
-ITERATION_DONE = 0
-
-start_time = time.time()
-\end{lstlisting}
-
-This $for$ cycle calculates the consensus. For every $iters$, is calculated the new "diminishing" alpha; message(s) are sent and received, then
-local variable are weighted. In order to solve consensus to desiderated function, the three implemented ones are inserted into an $if$ clause, and the
-right function is called. After that, the calculated gradient is multiplied by alpha and then new state is calculated. Then $loss \
-function$ is called and if $\left\lVert XX[tt] - XX[tt-1] \right\rVert \leq epsilon$ then buff is true and rank 0 check if all agent has reched the
-epsilon condition; if true it sends a broadcast message with a $true$ value to say to all that the cycle is done.
+This $for$ cycle calculates the consensus. For every $iters$, is calculated the new "diminishing" alpha; message(s) are sent
+and received, then local variable are weighted. In order to solve consensus to desiderated function, the three implemented
+ones are inserted into an $if$ clause, and the right function is called. After that, the calculated gradient is multiplied by
+alpha and then new state is calculated. Then $loss function$ is called and if $\left\lVert XX[tt] - XX[tt-1] \right\rVert
+\leq epsilon$ then buff is true and rank 0 check if all agent has reched the epsilon condition; if true it sends a broadcast 
+message with a $true$ value to say to all that the cycle is done.
 
 \begin{lstlisting}
 for tt in range(1, MAX_ITERATIONS - 1):
@@ -503,96 +337,8 @@ for tt in range(1, MAX_ITERATIONS - 1):
     ITERATION_DONE = tt
 \end{lstlisting}
 
-When consensus is reached, the values are printed to user, then all data are sent to rank 0 for centralized calculations.
-
-\begin{lstlisting}
-print("Parameters of node ", rank)
-print(XX[ITERATION_DONE - 3])
-
-world.Barrier()
-sys.stdout.flush()
-
-if rank != 0:
-    world.send(losses, dest=0)
-    world.send(XX, dest=0)
-\end{lstlisting}
-
-After each agent has sent its own data, agent 0, collect and sum all loss function datas. Then it collects all \textit{ITERATION\_DONE} state of each
-agent in a vector, which will be converted in logarithmic form and plotted.
-
-\begin{lstlisting}
-if rank == 0:
-
-    # Take the losses from all the other agents and sum
-    # We now have the overall loss given from the cost function
-    for i in range(1, agents_number):
-        agent_loss = world.recv(source=i)
-        losses = np.add(losses, agent_loss)
-
-    XX_agents = np.zeros([agents_number, *[MAX_ITERATIONS, *dimensions]])
-    XX_agents[0] = XX
-    for i in range(1, agents_number):
-        XX_agents[i] = world.recv(source=i)
-
-    log_losses = np.zeros(len(losses))
-    for index in range(0, len(losses)-1):
-        log_losses[index] = np.log(losses[index] - 8.945)
-
-    # Plot cost function logarithmic
-    plt.figure()
-    plt.plot(range(0, ITERATION_DONE - 3), log_losses[0:ITERATION_DONE - 3])
-    plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
-    plt.show()
-
-    # Plot cost function
-    plt.figure()
-    plt.plot(range(0, ITERATION_DONE - 3), losses[0:ITERATION_DONE - 3])
-    plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
-    plt.show()
-    #plt.pause(100)
-\end{lstlisting}
-
-Here iris trainig is loaded to test if with the thetas found are capable to predict the category of iris. An iteration along all iris trainig set
-is launched, then for all category we implement the exponential about the product from the theta founded and current row of the set. Then data is normalized and then the arg max is taken as predicted value,;if it is not the right answer, a variable \textit{wrong\_answer} is updated.
-
-\begin{lstlisting}
-if rank == 0:
-    to_find = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
-    # to_find = normalize_dataset(to_find)
-    wrong_answers = 0
-    for _set in to_find:
-        _tot_exp = 0
-        _tmp = np.zeros(4)
-        for i in range(0, category_n):
-            val = np.exp(np.dot(XX[ITERATION_DONE - 2][i], _set[0:4]) - CONSTANT_TO_SUBTRACT)
-            _tmp[i] = val
-            _tot_exp = _tot_exp + val
-        _tmp = np.divide(_tmp, _tot_exp)
-        _predicted = np.argmax(_tmp)
-        # print('Predicted: ', _predicted, ', real: ', _set[4])
-        if _predicted != _set[4]:
-            wrong_answers = wrong_answers + 1
-
-    print("Wrong predicted values: ", wrong_answers, "/", len(to_find))
-
-    # Show consensus
-    # for category in range(0, category_n):
-    for component in range(0, 4):
-        figure = plt.figure()
-        for agent in range(0, agents_number):
-            label = "Agent " + str(agent)
-            plt.plot(range(0, ITERATION_DONE), XX_agents[agent][0:ITERATION_DONE, 0, component], label=label)
-        plt.title("Component #" + str(component) + " of each $\Theta_{0}^{i}$")
-        leg = plt.legend(loc='best', ncol=2, mode="expand", shadow=True, fancybox=True)
-        leg.get_frame().set_alpha(0.5)
-        plt.show()
-    print("Iteration done: ", ITERATION_DONE, " Agent number: ", agents_number, "\nEpsilon: ", epsilon,
-          " Const  Alpha: ", alpha_coefficient, " Const Psi ", psi_coefficient,
-          "\nExecution time: ", time.time() - start_time, " Wrong preditions: ", wrong_answers)
-
-    plt.pause(20)
-    input("Press [enter] to continue.")
-\end{lstlisting}
+When consensus is reached, the theta values are printed to user, then all data are sent to rank 0 for centralized
+calculations and plot result.
 
 
 
@@ -619,65 +365,101 @@ This is a small constant used as stop condition. If the result of the current ca
 The step-size alpha plays a big role in the speed of convergence of the algorithm. There are 3 kinds of step-size. Fixed, diminishing and adaptive (Armijo). For reasons not discussed in this paper, it's not possible to use Armijo rule in a distributed problem.
 
 \subsection{Fixed step-size} \label{Subsec2.2.4}
- We will first deal with a simpler fixed step-size. With an epsilon equal to $0.001\  (10^{-3})$:\\
-\begin{tabularx}{\textwidth}{|X|X|X|X|}
-\hline
-\textbf{Value of fixed step-size} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o.30}\\
-\hline
-0.5 & overflow & alpha too big & -\\
-\hline
-0.1 & \textgreater 10000 & \textgreater 15 & 2\\
-\hline
-0.05 & \textgreater 10000 & \textgreater 15 & 1\\
-\hline
-0.01 & 1968 & 2.8 & 1\\
-\hline
-0.005 & 1558 & 2.3 & 1\\
-\hline
-0.001 & 2114 & 3.1 & 0\\
-\hline
-0.0005 & 1619 & 2.3 & 2\\
-\hline
-0.0001 & 527 & 0.7 & 14\\
-\hline
-\end{tabularx}
+ We will first deal with a simpler fixed step-size. With an epsilon equal to $0.001 (10^{-3})$:\\
+\begin{center}
+    \begin{tabular}{|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{1.5cm}|>{\centering\arraybackslash}m{1.5cm}|}
+        \hline
+        \scriptsize{\textbf{Value of fixed step-size}} & \scriptsize{\textbf{Iteration required}} & \scriptsize{\textbf{Execution time in s}} & \scriptsize{\textbf{Wrong guesses o.30}}\\
+        \hline \hline
+        0.5 & 4601 & 6.8 & 1\\
+        \hline
+        0.1 & 2109 & 3.24 & 1\\
+        \hline
+        0.05 & 2342 & 3.68 & 0\\
+        \hline
+        0.01 & 1153 & 2.05 & 2\\
+        \hline
+        0.005 & 680 & 1.14 & 9\\
+        \hline
+        0.001 & 22 & 0.05 & 22\\
+        \hline
+    \end{tabular}\\
+\end{center}
+%\begin{tabularx}{\textwidth}{|X|X|X|X|}
+%%{\begin{tabular}{|c|c|c|c|}
+%\hline
+%\textbf{Value of fixed step-size} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o.30}\\
+%\hline
+%0.5 & Not converging & & \\
+%\hline
+%0.1 & $>$50000 & $>$80 & 1\\
+%\hline
+%0.05 & $>$50000 & $>$80 & 1\\
+%\hline
+%0.01 & 2000 & 3 & 1\\
+%\hline
+%0.005 & 1600 & 2.4 & 1\\
+%\hline
+%0.001 & 2000 & 3.2 & 0\\
+%\hline
+%0.0005 & 1600 & 2.4 & 2\\
+%\hline
+%0.0001 & 500 & 0.8 & 13\\
+%\hline
+%\end{tabularx}
+%%\end{tabular}
 
-\\ \\
-These results show a general truth about the step-size. If it is too little, the learning process proceeds in a very slow way and it requires a huge amount of iterations. If the learning rate is too high, the gradient descent will most probably overshoot the minimum and it will not converge. Through trial and error, the step-size 0.001 was identified, it allows reaching good performance and accuracy. In fact, in only 3.1 seconds, we can make predictions with no errors, using our 30 instances test dataset.
+These results show a general truth about the step-size. If it is too little, the learning process proceeds in a very slow way and it requires a huge amount of iterations. If the learning rate is too high and the gradient descent most probably will overshoot the minimum and it will not converge. Through trial and error, the step-size 0.001 was identified, it allows reaching good performance and accuracy. In fact, in only 2.6 seconds, we can make predictions with no errors, using our 30 instances test dataset.
 
 \subsection{Diminishing step-size} \label{Subsec2.2.5}
 The diminishing step-size implemented in the code is in this form:
 TODO: SISTEMARE
 \\
-\begin{equation}
-\alpha = const \dot \left( \frac{1}{tt} \right) exp
-\end{equation}
+%\begin{equation}
+%\alpha = const \dot \left( \frac{1}{tt} \right) exp
+%\end{equation}
 Again, several tests were run by tweaking the multiplying constant and the exponent.\\ \\
-\begin{tabularx}{\textwidth}{|X|X|X|X|X|}
-\hline
-\textbf{psi\_coeff} & \textbf{alpha\_exp coefficient} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o. 30}\\
-\hline
-1 & 0.01 & overflow & - & -\\
-\hline
-1 & 0.1 & overflow & - & -\\
-\hline
-0.1 & 0.01 & \textgreater 10000 & \textgreater 15 & 1\\
-\hline
-0.1 & 0.5 & 349 & 0.5 & 0\\
-\hline
-0.1 & 0.1 & \textgreater 10000 & \textgreater 16 & 1\\
-\hline
-0.01 & 0.01 & 1852 & 2.7 & 1\\
-\hline
-0.01 & 0.1 & 1259 & 1.8 & 1\\
-\hline
-\end{tabularx}
+\begin{center}
+    \begin{tabular}{| >{\centering\arraybackslash}m{1.7cm} | >{\centering\arraybackslash}m{1.7cm} | >{\centering\arraybackslash}m{1.7cm} | >{\centering\arraybackslash}m{1.7cm} | >{\centering\arraybackslash}m{1.7cm} |}
+        \hline
+        \scriptsize{\textbf{psi\_coeff}} & \scriptsize{\textbf{alpha\_exp coefficient}} & \scriptsize{\textbf{Iteration required}} & \scriptsize{\textbf{Execution time in s}} & \scriptsize{\textbf{Wrong guesses o. 30}}\\
+        \hline \hline
+        1 & 0.01 & $>$20000 & $>$30 & 13\\
+        \hline
+        1 & 0.1 & 4033 & 6.66 & 1\\
+        \hline
+        0.1 & 0.01 & 2130 & 5.19 & 1\\
+        \hline
+        0.1 & 0.1 & 2028 & 3.07 & 0\\
+        \hline
+        0.01 & 0.01 & 1067 & 1.60 & 2\\
+        \hline
+        0.01 & 0.1 & 628 & 1 & 8\\
+        \hline
+    \end{tabular}\\
+\end{center}
+%\begin{tabularx}{\textwidth}{|X|X|X|X|X|}
+%\hline
+%\textbf{Alpha\_const} & \textbf{Alpha\_exp} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o. 30}\\
+%\hline
+%1 & 0.01 & 96 & 0.14 & 13\\
+%\hline
+%1 & 0.1 & 132 & 0.25 & 1\\
+%\hline
+%0.1 & 0.01 & 1300 & 1.9 & 1\\
+%\hline
+%0.1 & 0.1 & $>$50000 & $>$80 & 1\\
+%\hline
+%0.01 & 0.01 & 1900 & 3.2 & 1\\
+%\hline
+%0.01 & 0.1 & $>$50000 & $>$80 & 1\\
+%\hline
+%\end{tabularx}
 
-\\ \\
-\noindent The best result is obtained in only 349 iterations, with 0.1 and 0.5 as multiplicative constant and exponent respectively. This is done in roughly half of a second, obtaining no error. The accuracy is worst then the previous result, but this is obtained in a fraction of the time needed to obtain 0 error with a fixed step-size. A difference of 2 or 3 seconds may not seem important using the Iris Dataset, with a small amount of calculations. In a setup where a bigger number of calculations and bigger dataset are involved, one may appreciate the advantages of this faster approach.
+%\noindent The best result is obtained in only 132 iterations, with 1 and 0.1 as constant and exponent respectively. This is done in roughly a quarter of a second, obtaining only one error. The accuracy is worst then the previous result, but this is obtained in a fraction of the time needed to obtain 0 error with a fixed step-size. A difference of 2 or 3 seconds may not matter using the Iris Dataset, with a small amount of calculations. In a setup where a bigger number of calculations and bigger dataset are involved, one may prefer this slightly less accurate but faster approach. This graphs show the difference of the value calculated with the distributed algorithm and the...
+The best result in term of accuracy is achived with both parameters set to 0.1. The computation time is similar to the fixed-step size. \textit{Reducing the epsilon to 0.01, allow the program to reach consensus in 604 with parameters 0.01 and 0.1 and zero error.}
 
-
-
+TODO: VEDERE QUALE PARTE LASCIARE
 
 TODO: GRAFICI
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -696,7 +478,7 @@ In this work it has been resolved a Multinomial Logistic Regression problem usin
 
 %%%%%%%%%% BIBLIOGRAPHY %%%%%%%%%%%%%%
 \bibliography{bibliography}{}
-\bibliographystyle{plain}	
+\bibliographystyle{plain}   
 \addcontentsline{toc}{chapter}{Bibliography}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
