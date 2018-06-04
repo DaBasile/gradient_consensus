@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import sys
 import functions as func
 import time
+import networkx as nx
 
-CONSTANT_TO_SUBTRACT = 300
 usage_message = "usage mpiexec -n (number of agent) python3 filename.py -f \"function name\"" \
                  " optional[" \
                  "-k (number of connection per agent) " \
@@ -98,16 +98,23 @@ print("Agent ", rank, " got ", len(personal_dataset), " rows of dataset")
 world.Barrier()
 sys.stdout.flush()
 
-adj = cm.createAdjM(agents_number, number_of_inn_connection)
+graph = cm.createAdjM(agents_number, number_of_inn_connection)
+
+if rank == 0:
+    plt.figure('Graph')
+    nx.draw(graph, with_labels=True)
+    plt.draw()
+    plt.show()
 
 x0 = np.ones(dimensions)
 
 XX = np.zeros([MAX_ITERATIONS, *dimensions])
 losses = np.zeros(MAX_ITERATIONS)
 XX[0] = x0
+losses[0] = func.loss_softmax(x0, category_n, personal_dataset)
 
 num_of_neighbors = 0
-for in_neighbors in adj.predecessors(rank):
+for in_neighbors in graph.predecessors(rank):
     num_of_neighbors = num_of_neighbors + 1
 weight = 1 / (num_of_neighbors + 1)  # 1 is for self-loop
 
@@ -144,26 +151,26 @@ for tt in range(1, MAX_ITERATIONS - 1):
     #         u_i = u_i + world.recv(source=i) * matrix[j][i]
 
     # Send the state to neighbors
-    for node in adj.successors(rank):
+    for node in graph.successors(rank):
         world.send(XX[tt - 1], dest=node)
 
     # Update with state of all nodes before me
-    for node in adj.predecessors(rank):
+    for node in graph.predecessors(rank):
         u_i = u_i + world.recv(source=node) * weight
 
     # Go in the opposite direction with respect to the gradient
     gradient = 0
-    print(XX[tt-1])
+    # print(XX[tt-1])
 
     if function_name == "softmax":
-        gradient = func.gradient_softmax(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT,
+        gradient = func.gradient_softmax(XX[tt - 1], category_n, dimensions, personal_dataset,
                                          normalized)
 
     elif function_name == "quadratic":
         gradient = func.gradient_quadratic(XX[tt - 1], category_n, dimensions, personal_dataset, Q, r)
 
     elif function_name == "exponential":
-        gradient = func.gradient_exponential(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
+        gradient = func.gradient_exponential(XX[tt - 1], category_n, dimensions, personal_dataset)
 
     grad = np.multiply(alpha, gradient)
 
@@ -174,13 +181,13 @@ for tt in range(1, MAX_ITERATIONS - 1):
     XX[tt] = u_i
 
     if function_name == "softmax":
-        losses[tt] = func.loss_softmax(XX[tt], category_n, personal_dataset, CONSTANT_TO_SUBTRACT)
+        losses[tt] = func.loss_softmax(XX[tt], category_n, personal_dataset)
 
     elif function_name == "quadratic":
         losses[tt] = func.loss_quadratic(XX[tt], category_n, dimensions, personal_dataset, Q, r)
 
     elif function_name == "exponential":
-        losses[tt] = func.loss_exponential(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
+        losses[tt] = func.loss_exponential(XX[tt - 1], category_n, dimensions, personal_dataset)
 
     # Checking epsilon reached condition
     if np.linalg.norm(np.subtract(XX[tt], XX[tt - 1])) < epsilon:
@@ -211,13 +218,14 @@ for tt in range(1, MAX_ITERATIONS - 1):
             sys.stdout.flush()
     ITERATION_DONE = tt
 
+exec_time = time.time() - start_time
+
 # synchronise
 world.Barrier()
 
-print("Parameters of node ", rank)
-print(XX[ITERATION_DONE - 3])
+# print("Parameters of node ", rank)
+# print(XX[ITERATION_DONE - 3])
 
-world.Barrier()
 sys.stdout.flush()
 
 if rank != 0:
@@ -229,6 +237,7 @@ if rank != 0:
 ### Starting centralized calculation ###
 ########################################
 if rank == 0:
+    optimal_value = 8.9450
 
     # Take the losses from all the other agents and sum
     # We now have the overall loss given from the cost function
@@ -236,36 +245,41 @@ if rank == 0:
         agent_loss = world.recv(source=i)
         losses = np.add(losses, agent_loss)
 
+    # Print with respect to 0
+    for i in range(0, len(losses)):
+        losses[i] = np.subtract(losses[i], optimal_value)
+
     XX_agents = np.zeros([agents_number, *[MAX_ITERATIONS, *dimensions]])
     XX_agents[0] = XX
     for i in range(1, agents_number):
         XX_agents[i] = world.recv(source=i)
 
-    log_losses = np.zeros(len(losses))
-    for index in range(0, len(losses)-1):
-        log_losses[index] = np.log(losses[index] - 8.945)
-
-    # Plot cost function logarithmic
+    # Plot cost function
     plt.figure()
-    plt.plot(range(0, ITERATION_DONE - 3), log_losses[0:ITERATION_DONE - 3])
-    plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
+    plt.plot(range(0, ITERATION_DONE - 3), losses[0:ITERATION_DONE - 3])
+    plt.axhline(y=0, color="blue", linestyle="dashed")
+    plt.yscale('log')
+    plt.grid(True)
+    plt.title("$\log{ \sum_{i=0}^" + str(agents_number) + " f_i }$")
     plt.show()
 
     # Plot cost function
     plt.figure()
     plt.plot(range(0, ITERATION_DONE - 3), losses[0:ITERATION_DONE - 3])
+    plt.axhline(y=optimal_value, color="blue", linestyle="dashed")
+    plt.grid(True)
     plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
     plt.show()
 
-if rank == 0:
     to_find = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
-    # to_find = normalize_dataset(to_find)
+
     wrong_answers = 0
     for _set in to_find:
         _tot_exp = 0
         _tmp = np.zeros(4)
         for i in range(0, category_n):
-            val = np.exp(np.dot(XX[ITERATION_DONE - 2][i], _set[0:4]) - CONSTANT_TO_SUBTRACT)
+            const_to_subtract = func.find_const_to_subtract(XX[ITERATION_DONE-2], _set[0:4])
+            val = np.exp(np.dot(XX[ITERATION_DONE - 2][i], _set[0:4]) - const_to_subtract)
             _tmp[i] = val
             _tot_exp = _tot_exp + val
         _tmp = np.divide(_tmp, _tot_exp)
@@ -274,23 +288,28 @@ if rank == 0:
         if _predicted != _set[4]:
             wrong_answers = wrong_answers + 1
 
-    print("Wrong predicted values: ", wrong_answers, "/", len(to_find))
-
     # Show consensus
-    # for category in range(0, category_n):
-    for component in range(0, 4):
-        figure = plt.figure()
-        for agent in range(0, agents_number):
-            label = "Agent " + str(agent)
-            plt.plot(range(0, ITERATION_DONE), XX_agents[agent][0:ITERATION_DONE, 0, component], label=label)
-        plt.title("Component #" + str(component) + " of each $\Theta_{0}^{i}$")
-        leg = plt.legend(loc='best', ncol=2, mode="expand", shadow=True, fancybox=True)
-        leg.get_frame().set_alpha(0.5)
-        plt.show()
+    for category in range(0, category_n):
+        index = 1
+        for component in range(0, 4):
+            figure = plt.figure()
+            plt.title("$\Theta_{" + str(category) + "}$, component " + str(index))
+            index = index + 1
+            for agent in range(0, agents_number):
+                if agent == 0:
+                    color = "blue"
+                elif agent == 1:
+                    color = "green"
+                elif agent == 2:
+                    color = "yellow"
+                else:
+                    color = "red"
+                plt.plot(range(0, ITERATION_DONE), XX_agents[agent][0:ITERATION_DONE, 0, component], color=color)
+            plt.show()
+
     print("Iteration done: ", ITERATION_DONE, " Agent number: ", agents_number, "\nEpsilon: ", epsilon,
           " Const  Alpha: ", alpha_exp_coefficient, " Const Psi ", psi_coefficient,
-          "\nExecution time: ", time.time() - start_time, " Wrong preditions: ", wrong_answers)
+          "\nExecution time: ", exec_time, " Wrong preditions: ", wrong_answers)
 
-    plt.pause(20)
     input("Press [enter] to continue.")
 
