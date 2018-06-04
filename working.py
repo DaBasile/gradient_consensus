@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import sys
 import functions as func
 import time
+import networkx as nx
 
 usage_message = "usage mpiexec -n (number of agent) python3 filename.py -f \"function name\"" \
                  " optional[" \
@@ -99,11 +100,18 @@ sys.stdout.flush()
 
 adj = cm.createAdjM(agents_number, number_of_inn_connection)
 
+if rank == 0:
+    plt.figure('Graph')
+    nx.draw(adj, with_labels=True)
+    plt.draw()
+    plt.show()
+
 x0 = np.ones(dimensions)
 
 XX = np.zeros([MAX_ITERATIONS, *dimensions])
 losses = np.zeros(MAX_ITERATIONS)
 XX[0] = x0
+losses[0] = func.loss_softmax(x0, category_n, personal_dataset)
 
 num_of_neighbors = 0
 for in_neighbors in adj.predecessors(rank):
@@ -204,7 +212,7 @@ for tt in range(1, MAX_ITERATIONS - 1):
 
         break
 
-    if tt in range(0, MAX_ITERATIONS, 1000):
+    if tt in range(0, MAX_ITERATIONS, 100):
         if rank == 0:
             print("Iteration ", tt, "/", MAX_ITERATIONS)
             sys.stdout.flush()
@@ -228,6 +236,7 @@ if rank != 0:
 ### Starting centralized calculation ###
 ########################################
 if rank == 0:
+    optimal_value = 8.9450
 
     # Take the losses from all the other agents and sum
     # We now have the overall loss given from the cost function
@@ -235,28 +244,32 @@ if rank == 0:
         agent_loss = world.recv(source=i)
         losses = np.add(losses, agent_loss)
 
+    # Print with respect to 0
+    for i in range(0, len(losses)):
+        losses[i] = np.subtract(losses[i], optimal_value)
+
     XX_agents = np.zeros([agents_number, *[MAX_ITERATIONS, *dimensions]])
     XX_agents[0] = XX
     for i in range(1, agents_number):
         XX_agents[i] = world.recv(source=i)
 
-    log_losses = np.zeros(len(losses))
-    for index in range(0, len(losses)-1):
-        log_losses[index] = np.log(losses[index] - 8.945)
-
-    # Plot cost function logarithmic
+    # Plot cost function
     plt.figure()
-    plt.plot(range(0, ITERATION_DONE - 3), log_losses[0:ITERATION_DONE - 3])
-    plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
+    plt.plot(range(0, ITERATION_DONE - 3), losses[0:ITERATION_DONE - 3])
+    plt.axhline(y=0, color="blue", linestyle="dashed")
+    plt.yscale('log')
+    plt.grid(True)
+    plt.title("$\log{ \sum_{i=0}^" + str(agents_number) + " f_i }$")
     plt.show()
 
     # Plot cost function
     plt.figure()
     plt.plot(range(0, ITERATION_DONE - 3), losses[0:ITERATION_DONE - 3])
+    plt.axhline(y=optimal_value, color="blue", linestyle="dashed")
+    plt.grid(True)
     plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
     plt.show()
 
-if rank == 0:
     to_find = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
 
     wrong_answers = 0
@@ -274,19 +287,25 @@ if rank == 0:
         if _predicted != _set[4]:
             wrong_answers = wrong_answers + 1
 
-    print("Wrong predicted values: ", wrong_answers, "/", len(to_find))
-
     # Show consensus
-    # for category in range(0, category_n):
-    for component in range(0, 4):
-        figure = plt.figure()
-        for agent in range(0, agents_number):
-            label = "Agent " + str(agent)
-            plt.plot(range(0, ITERATION_DONE), XX_agents[agent][0:ITERATION_DONE, 0, component], label=label)
-        plt.title("Component #" + str(component) + " of each $\Theta_{0}^{i}$")
-        leg = plt.legend(loc='best', ncol=2, mode="expand", shadow=True, fancybox=True)
-        leg.get_frame().set_alpha(0.5)
-        plt.show()
+    for category in range(0, category_n):
+        index = 1
+        for component in range(0, 4):
+            figure = plt.figure()
+            plt.title("$\Theta_{" + str(category) + "}$, component " + str(index))
+            index = index + 1
+            for agent in range(0, agents_number):
+                if agent == 0:
+                    color = "blue"
+                elif agent == 1:
+                    color = "green"
+                elif agent == 2:
+                    color = "yellow"
+                else:
+                    color = "red"
+                plt.plot(range(0, ITERATION_DONE), XX_agents[agent][0:ITERATION_DONE, 0, component], color=color)
+            plt.show()
+
     print("Iteration done: ", ITERATION_DONE, " Agent number: ", agents_number, "\nEpsilon: ", epsilon,
           " Const  Alpha: ", alpha_exp_coefficient, " Const Psi ", psi_coefficient,
           "\nExecution time: ", time.time() - start_time, " Wrong preditions: ", wrong_answers)
