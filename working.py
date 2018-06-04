@@ -20,7 +20,7 @@ usage_message = "usage mpiexec -n (number of agent) python3 filename.py -f \"fun
 ################################################
 
 function_name = "softmax"
-alpha_type = "diminiscing"
+alpha_type = "diminishing"
 alpha_exp_coefficient = 0.01
 psi_coefficient = 0.01
 epsilon = 0.001
@@ -237,7 +237,7 @@ if rank != 0:
 ### Starting centralized calculation ###
 ########################################
 if rank == 0:
-    optimal_value = 8.9450
+    optimal_value = 8.945
 
     # Take the losses from all the other agents and sum
     # We now have the overall loss given from the cost function
@@ -257,18 +257,18 @@ if rank == 0:
     # Plot cost function
     plt.figure()
     plt.plot(range(0, ITERATION_DONE - 3), losses[0:ITERATION_DONE - 3])
-    plt.axhline(y=0, color="blue", linestyle="dashed")
+    plt.axhline(y=0, color="black", linestyle="dashed")
     plt.yscale('log')
     plt.grid(True)
-    plt.title("$\log{ \sum_{i=0}^" + str(agents_number) + " f_i }$")
+    plt.title("$\log{ \sum_{i=0}^" + str(agents_number) + " f_i - 8.945}$")
     plt.show()
 
     # Plot cost function
     plt.figure()
     plt.plot(range(0, ITERATION_DONE - 3), losses[0:ITERATION_DONE - 3])
-    plt.axhline(y=optimal_value, color="blue", linestyle="dashed")
+    plt.axhline(y=0, color="black", linestyle="dashed")
     plt.grid(True)
-    plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i$")
+    plt.title("$\sum_{i=0}^" + str(agents_number) + " f_i - 8.945$")
     plt.show()
 
     to_find = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
