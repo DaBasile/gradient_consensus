@@ -53,27 +53,42 @@
 \vspace{15mm}
 \end{center}
 In this report, it will be shown how to solve a Multinomial Logistic Regression (also known as \textit{Softmax Regression}) using a distributed method. The sub-gradient method has been used to distribute calculations among a configurable number of agents. A portion of the dataset is given to each agent and used to minimize a cost function related to the portion of the dataset in its possession.
+A Python3 program has been written supported by several libraries. The most important library is MPI4py which provides implementation of the MPI specifics. MPI is a communication protocol between nodes that executes the same program in parallel. We compared the results obtained through this program with MATLAB script which executes all operation with  a centralized architecture ( meaning that all operations are executed by a single agent).\\
+Several graphs are plotted in order to see the graph of communicating agents, how the consensus is reached and how the cost diminishes to a minimum.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \tableofcontents \thispagestyle{empty}
 \listoffigures\thispagestyle{empty}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%% INTRODUZIONE %%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
+
+\section*{Motivations}
 In the past there was a single \textit{Mainframe} that executed all digital computations. Years after, with the creation of the Personal Computer, more people could execute the same operations in private. Today's \textit{Microcontrollers} allow to make smart an infinity of devices. More algorithms have been created to connect these devices to distribute.\\
-This work implements a scenario in which there are some agents that estimate a cost function using their own information and those of the other agents; they use a \textit{Distributed Sub-gradient Method} to update their own estimate and, in particular, they resolve a \textit{Multinomial Logistic Regression}. After some test in \textit{MATLAB}, it is used \textit{MPI} implemented with \textit{Python}.\\
+ In general, this approach is useful because it allows cooperation between agents, to reach a common goal. In this case, the ability to split the workload in to several agents guarantees faster execution times.
+The Multinomial Logistic Regression generalizes the logistic regression for a multiclass problem, with more than two possible discrete outcomes, where each observation has several features.
+
+\section*{Contributions}
+This work implements a scenario in which there are some agents that estimate a cost function using their own information and those of other agents; they use a \textit{Distributed Sub-gradient Method} to update their own estimate and, in particular, they resolve a \textit{Multinomial Logistic Regression} problem.\\
+
+The first step was to create a MATLAB script that solves a quadratic optimization problem using a gradient method. In this script it has been \textit{simulated} a distributed approach in order to test the effectiveness of the method saw in Distributed Subgradient Methods for Multi-Agent Optimization \cite{CITATION:1}. MATLAB was only used in the prototype phase, because it doesn't allow real parallel computations. After the confirmation that the approach was working, it started the implementation of the algorithm in Python3 using the Message Passing Interface.\\
+The quadratic form used was SCRIVERE FORMULA \\
+This form was used only to test the convergence of the method.\\
+After established that, considering that the Supervised Learning problem known as Multinomial Logistic Regression gives as output a probability value for every considered class, it was necessary to implement the softmax function. SCRIVERE FORMULA E LINK CITAZIONE \\
+%https://en.wikipedia.org/wiki/Multinomial_logistic_regression
+\\The formula saw in \ref{EQ1.7} was minimized in a centralized setup using MATLAB, and the result was compared to the one of the Python distributed program.\\
+It was seen that the algorithm was converging, several tests were executed to find the optimal values for the step-size.\\
 The present work is divided into two chapters. In Chapter \ref{Cap1}, it is introduced the theory behind the problem and it is visualized and commented the implementation code. In Chapter \ref{Cap2} there are the results of simulations with some considerations.
 % \section*{Organization}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%% CAPITOLO  %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Chapter 1 Problem and its implementation} \label{Cap1}
+\chapter{Problem and its implementation} \label{Cap1}
 
 \section{Theory of the problem} \label{Sec1.1}
 \subsection {Distributed Subgradient Methods for Multi-Agent Optimization} \label{Subsec1.1.1}
@@ -116,11 +131,11 @@ h_\theta=\frac{1}{\sum_{j=1}^{K}{exp\left(\theta^{(j)^\top}x\right)}}\begin{bmat
 \end{equation}
 where the weights $\omega = \theta = (\theta^{(1)}, ..., \theta^{(K)}) \in R^{d_{x}}$. \\
 Using this function, the solution of the problem is given by finding:
-\begin{equation}
+\begin{equation}\label{EQ1.7}
 \theta^*=\arg\min_\theta -\sum_{i=1}^{N}{g_i(\theta)}
 \end{equation}
 with
-\begin{equation}
+\begin{equation} \label{EQ1.8}
 g_i\left(\theta\right):=\sum_{k=1}^{K}{1\{y^{(i)}=e_k\}\log{\left( \frac{exp(\theta^{(k)^\top}x^{(i)})}{\sum_{k=1}^{K}{exp( \theta^{(j)^\top}x )}} \right)}}
 \end{equation}
 where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION:2}
@@ -345,7 +360,7 @@ calculations and plot result.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%% CAPITOLO 2 %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Chapter 2 Results of simulations} \label{Cap2}
+\chapter{Results of simulations} \label{Cap2}
 The software described in the previous chapter was used to solve a Multinomial Logistic Regression problem. Specifically, we classified the data of the Iris Dataset.
 
 \section{Dataset, graph description and minimization function} \label{Sec2.1}
