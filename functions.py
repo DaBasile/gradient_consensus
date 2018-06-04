@@ -1,26 +1,32 @@
 import numpy as np
 
 
-def loss_softmax(all_theta, category_count, personal_dataset, CONSTANT_TO_SUBTRACT):
-    the_sum = 0
+def find_const_to_subtract(all_theta, feature_row):
+    _max = []
+    for theta in all_theta:
+        _max.append(np.dot(theta, feature_row))
+    return np.max(_max)
 
+
+def loss_softmax(all_theta, category_count, personal_dataset):
+    the_sum = 0
     for index in range(0, len(personal_dataset)):
         denominator = 0
+        const_to_subtract = find_const_to_subtract(all_theta, personal_dataset[index][0:4])
 
         for theta in all_theta:
-            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][0:4]) - CONSTANT_TO_SUBTRACT)
+            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][0:4]) - const_to_subtract)
 
         for category in range(0, category_count):
-
             if category == personal_dataset[index][4]:
-                _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
+                _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]) - const_to_subtract)
                 _log = np.log(np.divide(_exp, denominator))
                 the_sum = the_sum - _log
 
     return the_sum
 
 
-def gradient_softmax(all_theta, category_count, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT, normalized):
+def gradient_softmax(all_theta, category_count, dimensions, personal_dataset, normalized):
     thetas = np.zeros(dimensions)
 
     if normalized:
@@ -30,21 +36,19 @@ def gradient_softmax(all_theta, category_count, dimensions, personal_dataset, CO
 
     for index in range(0, len(personal_dataset)):
         denominator = 0
+        const_to_subtract = find_const_to_subtract(all_theta, personal_dataset[index][0:4])
 
         for theta in all_theta:
-            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
+            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][:4]) - const_to_subtract)
 
         for category in range(0, category_count):
             coeff = 0
-
             if category == personal_dataset[index][4]:
                 coeff = 1
-
-            _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
+            _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]) - const_to_subtract)
             coeff = coeff - np.divide(_exp, denominator)
             thetas[category] = thetas[category] - ((1 / m) *
                                                    np.multiply(personal_dataset[index][:4], coeff))
-
     return thetas
 
 

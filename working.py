@@ -6,7 +6,6 @@ import sys
 import functions as func
 import time
 
-CONSTANT_TO_SUBTRACT = 300
 usage_message = "usage mpiexec -n (number of agent) python3 filename.py -f \"function name\"" \
                  " optional[" \
                  "-k (number of connection per agent) " \
@@ -153,17 +152,17 @@ for tt in range(1, MAX_ITERATIONS - 1):
 
     # Go in the opposite direction with respect to the gradient
     gradient = 0
-    print(XX[tt-1])
+    # print(XX[tt-1])
 
     if function_name == "softmax":
-        gradient = func.gradient_softmax(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT,
+        gradient = func.gradient_softmax(XX[tt - 1], category_n, dimensions, personal_dataset,
                                          normalized)
 
     elif function_name == "quadratic":
         gradient = func.gradient_quadratic(XX[tt - 1], category_n, dimensions, personal_dataset, Q, r)
 
     elif function_name == "exponential":
-        gradient = func.gradient_exponential(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
+        gradient = func.gradient_exponential(XX[tt - 1], category_n, dimensions, personal_dataset)
 
     grad = np.multiply(alpha, gradient)
 
@@ -174,13 +173,13 @@ for tt in range(1, MAX_ITERATIONS - 1):
     XX[tt] = u_i
 
     if function_name == "softmax":
-        losses[tt] = func.loss_softmax(XX[tt], category_n, personal_dataset, CONSTANT_TO_SUBTRACT)
+        losses[tt] = func.loss_softmax(XX[tt], category_n, personal_dataset)
 
     elif function_name == "quadratic":
         losses[tt] = func.loss_quadratic(XX[tt], category_n, dimensions, personal_dataset, Q, r)
 
     elif function_name == "exponential":
-        losses[tt] = func.loss_exponential(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
+        losses[tt] = func.loss_exponential(XX[tt - 1], category_n, dimensions, personal_dataset)
 
     # Checking epsilon reached condition
     if np.linalg.norm(np.subtract(XX[tt], XX[tt - 1])) < epsilon:
@@ -205,7 +204,7 @@ for tt in range(1, MAX_ITERATIONS - 1):
 
         break
 
-    if tt in range(0, MAX_ITERATIONS, 100):
+    if tt in range(0, MAX_ITERATIONS, 1000):
         if rank == 0:
             print("Iteration ", tt, "/", MAX_ITERATIONS)
             sys.stdout.flush()
@@ -259,13 +258,14 @@ if rank == 0:
 
 if rank == 0:
     to_find = np.loadtxt('iris_training.txt', delimiter=';', dtype=float)
-    # to_find = normalize_dataset(to_find)
+
     wrong_answers = 0
     for _set in to_find:
         _tot_exp = 0
         _tmp = np.zeros(4)
         for i in range(0, category_n):
-            val = np.exp(np.dot(XX[ITERATION_DONE - 2][i], _set[0:4]) - CONSTANT_TO_SUBTRACT)
+            const_to_subtract = func.find_const_to_subtract(XX[ITERATION_DONE-2], _set[0:4])
+            val = np.exp(np.dot(XX[ITERATION_DONE - 2][i], _set[0:4]) - const_to_subtract)
             _tmp[i] = val
             _tot_exp = _tot_exp + val
         _tmp = np.divide(_tmp, _tot_exp)
