@@ -76,9 +76,8 @@ This work implements a scenario in which there are some agents that estimate a c
 The first step was to create a MATLAB script that solves a quadratic optimization problem using a gradient method. In this script it has been \textit{simulated} a distributed approach in order to test the effectiveness of the method saw in Distributed Subgradient Methods for Multi-Agent Optimization \cite{CITATION:1}. MATLAB was only used in the prototype phase, because it doesn't allow real parallel computations. After the confirmation that the approach was working, it started the implementation of the algorithm in Python3 using the Message Passing Interface.\\
 The quadratic form used was SCRIVERE FORMULA \\
 This form was used only to test the convergence of the method.\\
-After established that, considering that the Supervised Learning problem known as Multinomial Logistic Regression gives as output a probability value for every considered class, it was necessary to implement the softmax function. SCRIVERE FORMULA E LINK CITAZIONE \\
-%https://en.wikipedia.org/wiki/Multinomial_logistic_regression
-\\The formula saw in \ref{EQ1.7} was minimized in a centralized setup using MATLAB, and the result was compared to the one of the Python distributed program.\\
+After established that, considering that the Supervised Learning problem known as Multinomial Logistic Regression gives as output a probability value for every considered class, it was necessary to implement the softmax function. SCRIVERE FORMULA \cite{CITATION:3}. \\
+The formula saw in \ref{EQ1.7} was minimized in a centralized setup using MATLAB, and the result was compared to the one of the Python distributed program.\\
 It was seen that the algorithm was converging, several tests were executed to find the optimal values for the step-size.\\
 The present work is divided into two chapters. In Chapter \ref{Cap1}, it is introduced the theory behind the problem and it is visualized and commented the implementation code. In Chapter \ref{Cap2} there are the results of simulations with some considerations.
 % \section*{Organization}
