@@ -98,11 +98,11 @@ print("Agent ", rank, " got ", len(personal_dataset), " rows of dataset")
 world.Barrier()
 sys.stdout.flush()
 
-adj = cm.createAdjM(agents_number, number_of_inn_connection)
+graph = cm.createAdjM(agents_number, number_of_inn_connection)
 
 if rank == 0:
     plt.figure('Graph')
-    nx.draw(adj, with_labels=True)
+    nx.draw(graph, with_labels=True)
     plt.draw()
     plt.show()
 
@@ -114,7 +114,7 @@ XX[0] = x0
 losses[0] = func.loss_softmax(x0, category_n, personal_dataset)
 
 num_of_neighbors = 0
-for in_neighbors in adj.predecessors(rank):
+for in_neighbors in graph.predecessors(rank):
     num_of_neighbors = num_of_neighbors + 1
 weight = 1 / (num_of_neighbors + 1)  # 1 is for self-loop
 
@@ -151,11 +151,11 @@ for tt in range(1, MAX_ITERATIONS - 1):
     #         u_i = u_i + world.recv(source=i) * matrix[j][i]
 
     # Send the state to neighbors
-    for node in adj.successors(rank):
+    for node in graph.successors(rank):
         world.send(XX[tt - 1], dest=node)
 
     # Update with state of all nodes before me
-    for node in adj.predecessors(rank):
+    for node in graph.predecessors(rank):
         u_i = u_i + world.recv(source=node) * weight
 
     # Go in the opposite direction with respect to the gradient
