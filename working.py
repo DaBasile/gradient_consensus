@@ -218,13 +218,14 @@ for tt in range(1, MAX_ITERATIONS - 1):
             sys.stdout.flush()
     ITERATION_DONE = tt
 
+exec_time = time.time() - start_time
+
 # synchronise
 world.Barrier()
 
-print("Parameters of node ", rank)
-print(XX[ITERATION_DONE - 3])
+# print("Parameters of node ", rank)
+# print(XX[ITERATION_DONE - 3])
 
-world.Barrier()
 sys.stdout.flush()
 
 if rank != 0:
@@ -308,8 +309,7 @@ if rank == 0:
 
     print("Iteration done: ", ITERATION_DONE, " Agent number: ", agents_number, "\nEpsilon: ", epsilon,
           " Const  Alpha: ", alpha_exp_coefficient, " Const Psi ", psi_coefficient,
-          "\nExecution time: ", time.time() - start_time, " Wrong preditions: ", wrong_answers)
+          "\nExecution time: ", exec_time, " Wrong preditions: ", wrong_answers)
 
-    plt.pause(20)
     input("Press [enter] to continue.")
 
