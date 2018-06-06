@@ -93,20 +93,27 @@ The present work is divided into two chapters. In Chapter \ref{Cap1}, it is intr
 \subsection {Distributed Subgradient Methods for Multi-Agent Optimization} \label{Subsec1.1.1}
 In this problem there are $m$ agents that cooperatively minimize a common additive cost. The general optimization problem is:\\
 \begin{equation} \label{costfunct}
-minimize \quad \sum\limits_{i=1}^{m} f_{i} \left( x \right) \qquad subject \ to \quad x \in \mathbb{R}^n,
+min \quad \sum\limits_{i=1}^{m} f_{i} \left( x \right) \qquad subject \ to \quad x \in \mathbb{R}^n,
 \end{equation}
-where $f_i : \mathbb{R}^n \longrightarrow \mathbb{R}$ is the cost function of agent $i$, known only by this agent, and $x \in \mathbb{R}$ is a decision vector. It is assumed that:
+where $f_i : \mathbb{R}^n \longrightarrow \mathbb{R}$ is the cost function of agent $i$, known only by the agent $i$, and $x \in \mathbb{R^n}$ is the decision vector. It is assumed that:
 \begin{itemize} 
 \item the cost function is convex;
 \item the agents are distributed over a time-varying topology;
 \item the graph $\left(V,E_\infty\right)$ is connected, where $E_\infty$ is the set of edges $\left(j,i\right)$ representing agent pairs communicating directly an indefinite number of times;
-\item there isn't communication delay.
+\item there is not communication delay.
 \end{itemize} 
-Every agent $i$ generates and maintains estimates of the optimal decision vector based on information concerning its own cost function and exchanges this estimate with its directly neighbors at discrete times $t_0, t_1, t_2, ...$. Moreover, each agent $i$ has a vector of weights $a^i(k) \in \mathbb{R}^m$ at any time $t_k$; the scalar $a_i^j(k)$ is zero if the agent $i$ doesn't directly communicate with $j$, else it is the weight assigned from the agent $i$ to the information $x^j$ obtained from $j$ during the time interval $(t_k,t_{k+1})$. The estimates are updated according to the update rule:
+Every agent $i$ generates and maintains an estimate of the optimal decision vector based on information concerning its own cost function and exchanges this estimate with its neighbours at discrete times $t_0, t_1, t_2, ...$. A weights matrix is associated to the communication graph, and its elements are defined as follows:
+\[
+	\begin{cases}
+		> 0, & \text{if } (i,j) \in E(k) \\
+		0, & \text{otherwise}
+	\end{cases}
+\]
+Each agent $j$ that receives an information by a neighbour agent $i$ weights this information by multiplying it by $a_i^j(k) \in \mathbb{R}$. Then the update of the estimate of the optimal solution is update according to:
 \begin{equation} \label{update}
 x^i\left(k+1\right) = \sum_{j=1}^{m}{a_j^i\left(k\right)x^i\left(k\right)-a^i\left(k\right)d_i\left(k\right)}
 \end{equation}
-where $\alpha^i(k)>0$ is the stepsize used by agent $i$ and the vector $d_i(k)$ is a subgradient of agent $i$ objective function $f_i(x)$ at $x=x^i(k)$. \cite{CITATION:1}
+where $\alpha^i(k)>0$ is the step-size used by agent $i$ and the vector $d_i(k)$ is a sub-gradient of objective function $f_i(x)$ calculated at $x=x^i(k)$. \cite{CITATION:1}
 
 \subsection {Multinomial Logistic Regression} \label{Subsec1.1.2}
 The problem to be solved is a Supervised Learning problem called Multinomial Logistic Regression, also known as Softmax Regression, and it generalizes the more common Logistic Regression. The difference between them is that in the former there are several classes to be considered, in the latter, there are only two classes (or equivalently a binary class).\\
@@ -151,7 +158,7 @@ where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION
 \State Define the Adjacency Matrix, Weights Matrix, $\alpha^i = \alpha$ constant for each iteration
 \While{No stop rule is true, each node $i$ does:} 
     \State calculate $\nabla f_i$
-    \For {each neighbor j}
+    \For {each neighbour j}
         \State $\theta_i(k+1) = \theta_i(k+1) + a^i_j(k) \theta^j(k)$
     \EndFor
     \State $\theta_i(k+1) = \theta_i(k+1) - \alpha \nabla f_i$
@@ -167,11 +174,11 @@ where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION
 
 Here we are defining and explaining what has been implemented in Python to solve the problem. The solution has been
 implemented using: $numpy$ library which computes all vector and matrix operation such as transposition, product, division,
-summation; $networkx$ which creates and manage adjacency matricies for all agent; $matplotlib$ that create and plot result
+summation; $networkx$ which creates and manage adjacency matrices for all agent; $matplotlib$ that create and plot result
 which we have cought during test and training phase. At a first time the code check if any parameter are send to every agent,
 then start to create environment, such as get the number of agent, create adjacency matrix and initialize local variable where
-it will save collected data. The weights depends about how many in-neighbors each agent has, because our adjacency matrix is
-setted with k in-neighbors that can be setted when program is launched. \\
+it will save collected data. The weights depends about how many in-neighbours each agent has, because our adjacency matrix is
+setted with k in-neighbours that can be setted when program is launched. \\
 
 The adjacency matrix is created by \textit{createAdjM} function, that make a communication graph using world\_d as number of
 mpi agents, n\_edges  setted by default as 1 (if it is not given or
@@ -188,7 +195,7 @@ computed as follows:
     \item The instruction $ if \ e >= world\_d $  check if the sum is over the number of
     agents and if is true just subtracts this one
 
-    \item Instead $ if \ e \ $==$ \  j $ removes the ipotetical unnecessary self loop.
+    \item Instead $ if \ e \ $==$ \  j $ removes the hypothetical unnecessary self loop.
 \end{itemize}
 
 
@@ -258,7 +265,7 @@ The complete iris training set is loaded, and environment variables are setted, 
 }$. Then the dataset is splitted equal parts to all agents and each one gets its one and print how many row it has.
 
 Every agent creates the same communication directed graph with number of agents and number of in connection. Then state and
-loss variable are created, setted to 0 of \textit{MAX\_ITERATIONS} size. In order to get wighted message, all in-neighbors
+loss variable are created, setted to 0 of \textit{MAX\_ITERATIONS} size. In order to get weighted message, all in-neighbours
 are found and the variable \textit{weight} is setted as the average. If the function name inserted is "quadratic" Q and r
 variables are created randomly. \textit{epsilon\_reached} and \textit{buff} are epsilon checker variable that say to agent
 when they have to exit from the loop (if epsilon is reached).
@@ -268,7 +275,7 @@ This $for$ cycle calculates the consensus. For every $iters$, is calculated the 
 and received, then local variable are weighted. In order to solve consensus to desiderated function, the three implemented
 ones are inserted into an $if$ clause, and the right function is called. After that, the calculated gradient is multiplied by
 alpha and then new state is calculated. Then $loss function$ is called and if $\left\lVert XX[tt] - XX[tt-1] \right\rVert
-\leq epsilon$ then buff is true and rank 0 check if all agent has reched the epsilon condition; if true it sends a broadcast 
+\leq epsilon$ then buff is true and rank 0 check if all agent has reached the epsilon condition; if true it sends a broadcast 
 message with a $true$ value to say to all that the cycle is done.
 
 \begin{lstlisting}
@@ -369,7 +376,7 @@ This dataset is composed of 150 instances, 120 used for training, the rest for t
 There are some key factors that influence \textit{the computational time}, \textit{the numbers of iterations necessary} and \textit{the accuracy of the results}.\\
 
 \subsection{Number of nodes} \label{Subsec2.2.1}
-The Python program, thanks to the MPI platform, is capable of running on an arbitrary number of nodes. It was tested on as little as 2 nodes to as many as 60 nodes, which means that every node was processing the data of 2 instances (120 instances divided into 60 nodes). The best performances are obtained when the number of nodes corresponds to the number of physical cores of the machine where it runs. When the number of nodes exceeds greatly the number of physical cores, the resources are oversubscribed. In this case, the performances degrade notably as the nodes compete for cache and memory and the processors' schedulers are put in a difficult situation. On a 4-core test machine, a computation with 5000 iterations and 30 nodes is done in 5 minutes. The same machine can do the same number of iterations, but with 60 nodes, in 15 minutes. Therefore, the following tests will be shown on a 4 nodes setup. \\
+The Python program, thanks to the MPI platform, is capable of running on an arbitrary number of nodes. It was tested on as little as 2 nodes to as many as 60 nodes, which means that every node was processing the data of 2 instances (120 instances divided into 60 nodes). The best performances are obtained when the number of nodes corresponds to the number of physical cores of the machine where it runs. When the number of nodes exceeds greatly the number of physical cores, the resources are oversubscribed. In this case, the performances degrade notably as the nodes compete for cache and memory and the processors' schedulers are put in a difficult situation. On a 4-core test machine, a computation with 5000 iterations and 30 nodes is done in 5 minutes. The same machine can do the same number of iterations, but with 60 nodes, in 15 minutes. Therefore, the following tests will be shown on a 4 nodes set-up. \\
 
 \subsection{Epsilon} \label{Subsec2.2.2}
 This is a small constant used as stop condition. If the result of the current calculation differs less than epsilon from the previous, the algorithm is stopped.
@@ -440,7 +447,7 @@ Again, several tests were run by tweaking the multiplying constant and the expon
 \end{center}
 \end{scriptsize}
 
-\noindent The best result is obtained in only 349 iterations, with 0.1 and 0.5 as multiplicative constant and exponent respectively. This is done in roughly half of a second, obtaining no error. The accuracy is worst then the previous result, but this is obtained in a fraction of the time needed to obtain 0 error with a fixed step-size. A difference of 2 or 3 seconds may not seem important using the Iris Dataset, with a small amount of calculations. In a setup where a bigger number of calculations and bigger dataset are involved, one may appreciate the advantages of this faster approach.
+\noindent The best result is obtained in only 349 iterations, with 0.1 and 0.5 as multiplicative constant and exponent respectively. This is done in roughly half of a second, obtaining no error. The accuracy is worst then the previous result, but this is obtained in a fraction of the time needed to obtain 0 error with a fixed step-size. A difference of 2 or 3 seconds may not seem important using the Iris Dataset, with a small amount of calculations. In a set-up where a bigger number of calculations and bigger dataset are involved, one may appreciate the advantages of this faster approach.
 
 
 
