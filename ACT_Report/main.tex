@@ -172,18 +172,16 @@ where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION
 
 \section {Code Implementation} \label{Sec1.2}
 
-Here we are defining and explaining what has been implemented in Python to solve the problem. The solution has been
+Here is defined and explained the Python imlementation that solves the problem. The solution has been
 implemented using: $numpy$ library which computes all vector and matrix operation such as transposition, product, division,
-summation; $networkx$ which creates and manage adjacency matrices for all agent; $matplotlib$ that create and plot result
-which we have cought during test and training phase. At a first time the code check if any parameter are send to every agent,
-then start to create environment, such as get the number of agent, create adjacency matrix and initialize local variable where
-it will save collected data. The weights depends about how many in-neighbours each agent has, because our adjacency matrix is
-setted with k in-neighbours that can be setted when program is launched. \\
+summation; $networkx$ which creates and manages adjacency matrices for all agent; $matplotlib$ that plots the results
+with data from the test and training phases. At first, the code checks if all the paramethers are valid,
+then it starts to create the environment, the adjacency matrix and it initializes the local variables where
+the data will be saved. The weights depend on how many in-neighbours each agent has. The number of in-neighbours for each agent can be passed as a paramether at launch, by specifying it with -k . \\
 
-The adjacency matrix is created by \textit{createAdjM} function, that make a communication graph using world\_d as number of
-mpi agents, n\_edges  setted by default as 1 (if it is not given or
-bigger than number of agent), phi that is simply a phase inserted into
-graph which just shift the connection, by default is 0. The first $for$
+The adjacency matrix is created by the \textit{createAdjM} function. It makes a communication graph using world\_d as number of
+mpi agents, n\_edges  (setted by default as 1), phi that is simply a phase inserted into
+graph which just shift the connection, by default is 0 (TODO: la parte di phi non mi convince). The first $for$
 cycle sets the number of agents that the system has, then edges are
 computed as follows:
 \begin{itemize}
@@ -192,7 +190,7 @@ computed as follows:
     that the agent j will send a message, phi is the phase and just
     shift the agent that j will send a message and the "+1" 
 
-    \item The instruction $ if \ e >= world\_d $  check if the sum is over the number of
+    \item The instruction $ if \ e >= world\_d $  checks if the sum is over the number of
     agents and if is true just subtracts this one
 
     \item Instead $ if \ e \ $==$ \  j $ removes the hypothetical unnecessary self loop.
@@ -203,7 +201,7 @@ Loss softmax function,\textit{loss\_softmax} gets as parameter the current state
 iris set (\textit{category\_count}), the agent dataset (\textit{personal\_dataset}) and a \textit{CONSTANT\_TO\_SUBTRACT}, a
 constant to prevent overflow.\\
 The algorithm wants to calculate the $\displaystyle\sum_{i=0}^{number\_of\_agents} f_{i}(x)$ and this function calculate the
-agent \textit{i} $f(x)$. This can be done as follows: for every row in the personal dataset, the algorithm computes the
+agent \textit{i} $f(x)$. This is done as follows: for every row in the personal dataset, the algorithm computes the
 denominator that is the sum over all exponential. Then it computes, category by category, row by row, the logarithm of ratio
 between the sum previously calculated and the exponential of the row. After that, there's the summation of all calculated
 elements.
@@ -228,8 +226,7 @@ def loss_softmax(all_theta, category_count, personal_dataset, CONSTANT_TO_SUBTRA
     return the_sum
 \end{lstlisting}
 
-The gradient method implemented here, called \textit{gradient\_softmax} This is the gradient of softmax equation, that has
-the same concept as the function mentioned before: calculate in a first time se sum of all exponential theta and then sum for
+In the function \textit{gradient\_softmax} there is implemented the gradient of softmax equation. It is calculated similarly as the function mentioned before: calculate in a first time the sum of all exponential theta and then sum for
 each coefficient, subtract from one that coefficient and finally subtract the dataset normalized with that to the respective
 theta.
 
@@ -259,13 +256,12 @@ def gradient_softmax(all_theta, category_count):
 
 \subsection {working.py}
 
-In this file is implemented the main algorithm where the consensus and the minimization of loss function is calculated.\\
+In this file is implemented the main algorithm where the loss function is minimized and the consensus is reached.\\
 
-The complete iris training set is loaded, and environment variables are setted, as the number of agents, the name of $agent_{i
-}$. Then the dataset is splitted equal parts to all agents and each one gets its one and print how many row it has.
+The complete iris training set is loaded, and some environment variables are setted like the number of agents. Then the dataset is splitted in equal parts to all agents and each one gets its own piece and it prints how many row it has.
 
 Every agent creates the same communication directed graph with number of agents and number of in connection. Then state and
-loss variable are created, setted to 0 of \textit{MAX\_ITERATIONS} size. In order to get weighted message, all in-neighbours
+loss variable are created, setted to 0 of \textit{MAX\_ITERATIONS} size. In order to get weight the messages, all in-neighbours
 are found and the variable \textit{weight} is setted as the average. If the function name inserted is "quadratic" Q and r
 variables are created randomly. \textit{epsilon\_reached} and \textit{buff} are epsilon checker variable that say to agent
 when they have to exit from the loop (if epsilon is reached).
