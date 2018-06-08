@@ -17,6 +17,7 @@
 \usepackage{comment}
 \usepackage{listings}
 \usepackage[svgnames]{xcolor}
+\usepackage{subcaption}
 
 \lstset{ 
     backgroundcolor=\color{white},   
@@ -363,7 +364,71 @@ calculations and plot result.
 %%%%%%%%% CAPITOLO 2 %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Results of simulations} \label{Cap2}
-The software described in the previous chapter was used to solve a Multinomial Logistic Regression problem. Specifically, we classified the data of the Iris Dataset.
+	To verify the correctness of the software, a couple of simulations were run, divided into two parts:
+\begin{itemize}
+	\item Minimization of the Softmax function to prove the convergence to the optimal value
+	\item Application of the minimization algorithm to find the optimal coefficients and prediction on the test dataset
+\end{itemize}
+
+\section{Minimization of the Softmax function}
+The simulation has been carried out using a random directed graph made up of 17 agents, as shown in figure \ref{graph_17_agents}. \\
+\begin{figure}[hb]
+	\centering
+	{\includegraphics[scale=.55]{figs/Graph}}
+	\caption{Communication graph used for the simulation.}
+	\label{graph_17_agents}
+\end{figure}
+
+For completing this simulation, a diminishing step-size has been used, with the following formulation:
+\begin{equation}
+	\alpha^k = 0.01 \left( \dfrac{1}{k} \right) ^{0.4}
+\end{equation}
+with $k$ indicating the current iteration.\\
+The problem to be solved is the one formulated in \ref{EQ1.7}. Let's suppose to indicate the whole dataset as $S$. Each agent $i$ can access to a limited set $s_i$ of examples contained in $S$. To each agent is given a set $s_i$, chosen as:
+\begin{equation}
+	\label{dataset_condition}
+	S = \bigcup\limits_{i=1}^{17} s_i
+\end{equation}
+In the simulation, the training set $S$ is composed by 120 examples, split into set $s_i$ of 6 or 7 examples, chosen in order to equation \ref{dataset_condition} hold.  \\
+The iterations run are 15000, sufficient enough to see the function approaching the convergence, but not sufficient enough to reach the minimum value of the function, calculated with MATLAB to be $8.945$. The figure \ref{log_cost} shows in a logarithmic scale how the algorithm tends to minimize the cost value at each iteration. \\
+\begin{figure}[hb]
+	\centering
+	\includegraphics[scale=0.4]{figs/cost_log_scale}
+	\caption{Value of the normalized cost function in a logarithmic scale over all the iterations. }
+	\label{log_cost}
+\end{figure}
+
+The value of the cost function is shown in figure \ref{lin_cost} in a linear scale too, so it can be seen how the algorithm approaches the minimum value $\Theta^{*}$ in order to have the minimum of the problem \ref{EQ1.7}.
+
+\begin{figure}[ht]
+	\centering
+	\includegraphics[scale=0.4]{figs/cost_linear_scale}
+	\caption{Value of the normalized cost function in a linear scale. }
+	\label{lin_cost}
+\end{figure}
+
+As can be seen in figure \ref{avg_consensus}, all the agents try to reach the consensus for each component of the local minimum of the problem. 
+
+To better see the consensus, in this simulation the initial condition have been chosen to be random integer number between $-10$ and $+10$. With this choice is more visible the trend if the agents that try to reach consensus.
+
+\begin{figure}[ht]
+	\centering
+	\begin{subfigure}{.5\textwidth}
+		\centering
+		\includegraphics[scale=.4]{figs/theta_1_3_overall}
+		\caption{Overall trend over all the iterations}
+		\label{avg_consensus:overall}
+	\end{subfigure}%
+	\begin{subfigure}{.5\textwidth}
+		\centering
+		\includegraphics[scale=.4]{figs/theta_1_3_detail}
+		\caption{Detail for the first 140 iterations}
+		\label{avg_consensus:detail}
+	\end{subfigure}
+	\caption{Consensus on the third component of $\Theta_1$}
+	\label{avg_consensus}
+\end{figure}
+
 
 \section{Dataset, graph description and minimization function} \label{Sec2.1}
 This dataset is composed of 150 instances, 120 used for training, the rest for tests. The instances contain 3 classes, each representing a type of Iris flower. Every instance has 4 features, sepal length, sepal width, petal length, petal width expressed in $cm$. We tried different types of graphs. These graphs are all strongly connected and the weight matrices for the nodes are doubly stochastic, as per the assumptions of convergence of the algorithm described in Chapter \ref{Cap1}. The results discussed in this chapter, if not differently noted, refer to cyclic graphs with a variable number of nodes. The program can minimize all kinds of loss functions. As shown in Chapter \ref{Sec1.2}, the quadratic and exponential functions can also be used. These last 2 functions don't guarantee useful results and/or convergence. The minimization function used in this chapter is the one described in Chapter \ref{Subsec1.1.2}, softmax.

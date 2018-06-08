@@ -1,8 +1,20 @@
 \begin{thebibliography}{1}
 
-\bibitem{MR-GB:11}
-Mario Rossi and Giulio Bianchi.
-\newblock Just an example.
-\newblock {\em La Repubblica}, 2011.
+\bibitem{CITATION:1}
+A.~Nedic and A.~Ozdaglar.
+\newblock Distributed subgradient methods for multi-agent optimization.
+\newblock {\em IEEE Transactions on Automatic Control}, 2009.
+
+\bibitem{CITATION:2}
+Stanford.
+\newblock Softmax regression.
+\newblock Available at
+  \url{http://ufldl.stanford.edu/tutorial/supervised/SoftmaxRegression/}.
+
+\bibitem{CITATION:3}
+Wikipedia.
+\newblock Multinomial logistic regression.
+\newblock Available at
+  \url{https://en.wikipedia.org/wiki/Multinomial_logistic_regression}.
 
 \end{thebibliography}

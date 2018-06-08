@@ -1,0 +1,19 @@
+\BOOKMARK [0][-]{chapter*.4}{Introduction}{}% 1
+\BOOKMARK [0][-]{chapter.1}{Problem and its implementation}{}% 2
+\BOOKMARK [1][-]{section.1.1}{Theory of the problem}{chapter.1}% 3
+\BOOKMARK [2][-]{subsection.1.1.1}{Distributed Subgradient Methods for Multi-Agent Optimization}{section.1.1}% 4
+\BOOKMARK [2][-]{subsection.1.1.2}{Multinomial Logistic Regression}{section.1.1}% 5
+\BOOKMARK [2][-]{subsection.1.1.3}{Pseudocode}{section.1.1}% 6
+\BOOKMARK [1][-]{section.1.2}{Code Implementation}{chapter.1}% 7
+\BOOKMARK [2][-]{subsection.1.2.1}{working.py}{section.1.2}% 8
+\BOOKMARK [0][-]{chapter.2}{Results of simulations}{}% 9
+\BOOKMARK [1][-]{section.2.1}{Minimization of the Softmax function}{chapter.2}% 10
+\BOOKMARK [1][-]{section.2.2}{Dataset, graph description and minimization function}{chapter.2}% 11
+\BOOKMARK [1][-]{section.2.3}{Performance}{chapter.2}% 12
+\BOOKMARK [2][-]{subsection.2.3.1}{Number of nodes}{section.2.3}% 13
+\BOOKMARK [2][-]{subsection.2.3.2}{Epsilon}{section.2.3}% 14
+\BOOKMARK [2][-]{subsection.2.3.3}{Learning rate}{section.2.3}% 15
+\BOOKMARK [2][-]{subsection.2.3.4}{Fixed step-size}{section.2.3}% 16
+\BOOKMARK [2][-]{subsection.2.3.5}{Diminishing step-size}{section.2.3}% 17
+\BOOKMARK [0][-]{chapter*.11}{Conclusions}{}% 18
+\BOOKMARK [0][-]{chapter*.12}{Bibliography}{}% 19
