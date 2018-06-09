@@ -443,13 +443,19 @@ This dataset is composed of 150 instances, 120 used for training, the rest for t
 There are some key factors that influence \textit{the computational time}, \textit{the numbers of iterations necessary} and \textit{the accuracy of the results}.\\
 
 \subsection{Number of nodes} \label{Subsec2.2.1}
-The Python program, thanks to the MPI platform, is capable of running on an arbitrary number of nodes. It was tested on as little as 2 nodes to as many as 60 nodes, which means that every node was processing the data of 2 instances (120 instances divided into 60 nodes). The best performances are obtained when the number of nodes corresponds to the number of physical cores of the machine where it runs. When the number of nodes exceeds greatly the number of physical cores, the resources are oversubscribed. In this case, the performances degrade notably as the nodes compete for cache and memory and the processors' schedulers are put in a difficult situation. On a 4-core test machine, a computation with 5000 iterations and 30 nodes is done in 5 minutes. The same machine can do the same number of iterations, but with 60 nodes, in 15 minutes. Therefore, the following tests will be shown on a 4 nodes set-up. \\
+The Python program, thanks to the MPI platform, is capable of running on an arbitrary number of nodes. It was tested on as little as 2 nodes to as many as 60 nodes, which means that every node was processing the data of 2 instances (120 instances divided into 60 nodes). The best performances are obtained when the number of nodes corresponds to the number of physical cores of the machine where it runs. When the number of nodes exceeds greatly the number of physical cores, the resources are oversubscribed. In this case, the performances degrade notably as the nodes compete for cache and memory and the processors' schedulers are put in a difficult situation. On a 4-core test machine, a computation with 5000 iterations and 30 nodes is done in 5 minutes. The same machine can do the same number of iterations, but with 60 nodes, in 15 minutes. Therefore, to show the scalability of the software,  the following tests will be shown on a 4 nodes set-up and a 17 nodes setup (the same of figure 2.1) . \\
 
 \subsection{Epsilon} \label{Subsec2.2.2}
 This is a small constant used as stop condition. If the result of the current calculation differs less than epsilon from the previous, the algorithm is stopped.
 
 \subsection{Learning rate} \label{Subsec2.2.3}
 The step-size alpha plays a big role in the speed of convergence of the algorithm. There are 3 kinds of step-size. Fixed, diminishing and adaptive (Armijo). For reasons not discussed in this paper, it's not possible to use Armijo rule in a distributed problem.
+
+\subsection{Initial condition} \label{Subsec2.2.4}
+The agents should start with an initial condition, expressed in the code with x0. This initial condition is the state from which the agents start to compute. The program was tested with random initial conditions for all agents and the consensus was still reached. The garantee the repeatability of the experiments, the initial condition in the tests is always set to 1.
+
+\section{Four Nodes Setup} \label{Sec2.2}
+
 
 \subsection{Fixed step-size} \label{Subsec2.2.4}
  We will first deal with a simpler fixed step-size. With an epsilon equal to $0.001\  (10^{-3})$:\\
@@ -483,7 +489,7 @@ These results show a general truth about the step-size. If it is too little, the
 
 \subsection{Diminishing step-size} \label{Subsec2.2.5}
 The diminishing step-size implemented in the code is in this form:
-TODO: SISTEMARE
+TODO: SISTEMARE FORMULA
 \\
 \begin{equation}
 \alpha = const \left( \frac{1}{tt} \right) exp
@@ -518,8 +524,52 @@ Again, several tests were run by tweaking the multiplying constant and the expon
 
 
 
+\section{Seventeen Nodes Setup} \label{Sec2.2}
+These are the results for the setup shown in figure 2.1. \\
+The computation times are greatly larger, the tests were executed on a quad-core machine, MPI oversubscribed the resources and the CPU scheduler was put at hard work. \\
+The results are still very interesting. \\
+The optimal step-size is different from the ideal step-size of the 4 nodes setup. Only through several tests and experience is possible to find a good step-size.
 
-TODO: GRAFICI
+
+
+\begin{scriptsize}
+\begin{center}
+\begin{tabular}{|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|}
+\hline
+\scriptsize{\textbf{psi\_coeff}} & \scriptsize{\textbf{alpha\_exp coefficient}} & \scriptsize{\textbf{Iteration required}} & \scriptsize{\textbf{Execution time in s}} & \scriptsize{\textbf{Wrong guesses o. 30}}\\
+\hline \hline
+0.1 &  0.1 & \textgreater 10000 & \textgreater 440 & 2\\
+\hline
+0.5 & 0.1 & \textgreater 1000 & \textgreater 440 & 2\\
+\hline
+0.9 & 0.1 & \textgreater 10000 & \textgreater 440 & 2\\
+\hline
+0.01 & 0.1 & 1894 & 83 & 2\\
+\hline
+0.1 & 0.5 & 698 & 30 & 2\\
+\hline
+0.5 & 0.5 & 1017 & 44 & 1\\
+\hline
+0.9 & 0.5 & 2409 & 107 & 0\\
+\hline
+0.01 & 0.5 & 318 & 13 & 14\\
+\hline
+0.1 & 0.01 & \textgreater 10000 & \textgreater 440 & 1\\
+\hline
+0.5 & 0.01 & \textgreater 10000 & \textgreater 440 & 2\\
+\hline
+0.9 & 0.01 & \textgreater 10000 & \textgreater 440 & 2\\
+\hline
+0.01 & 0.01 & 3717 & 164 & 2\\
+\hline
+
+\end{tabular}\\
+\end{center}
+\end{scriptsize}
+
+
+
+TODO: AGGIUNGERE GRAFICI
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%% SVILUPPI FUTURI %%%%%%
