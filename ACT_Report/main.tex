@@ -53,7 +53,7 @@
 {\Huge \textbf{Abstract}}\\
 \vspace{15mm}
 \end{center}
-In this report, it will be shown how to solve a Multinomial Logistic Regression (also known as \textit{Softmax Regression}) using a distributed method. The sub-gradient method has been used to distribute calculations among a configurable number of agents. A portion of the dataset is given to each agent and used to minimize a cost function related to the portion of the dataset in its possession.
+In this report, it will be shown how to solve a Multinomial Logistic Regression problem (also known as \textit{Softmax Regression}) using a distributed method. The sub-gradient method has been used to distribute calculations among a configurable number of agents. A portion of the dataset is given to each agent and used to minimize a cost function related to the portion of the dataset in its possession.
 A Python3 program has been written supported by several libraries. The most important library is MPI4py which provides implementation of the MPI specifics. MPI is a communication protocol between nodes that executes the same program in parallel. We compared the results obtained through this program with MATLAB script which executes all operation with  a centralized architecture ( meaning that all operations are executed by a single agent).\\
 Several graphs are plotted in order to see the graph of communicating agents, how the consensus is reached and how the cost diminishes to a minimum.
 
@@ -67,12 +67,12 @@ Several graphs are plotted in order to see the graph of communicating agents, ho
 \addcontentsline{toc}{chapter}{Introduction}
 
 \section*{Motivations}
-In the past there was a single \textit{Mainframe} that executed all digital computations. Years after, with the creation of the Personal Computer, more people could execute the same operations in private. Today's \textit{Microcontrollers} allow to make smart all the of devices. More algorithms have been created to connect these devices to distribute.\\
+In the past there was a single \textit{Mainframe} that executed all digital computations. Years after, with the creation of the Personal Computer, more people could execute the same operations in private. Today's \textit{Microcontrollers} allow to make smart all kind of devices. More algorithms have been created to connect these devices to distribute computations and tasks.\\
  In general, this approach is useful because it allows cooperation between agents, to reach a common goal. In this case, the ability to split the workload in to several agents guarantees faster execution times.
-The Multinomial Logistic Regression generalizes the logistic regression for a multiclass problem, with more than two possible discrete outcomes, where each observation has several features.
+The Multinomial Logistic Regression generalizes the logistic regression for a multiclass problems, with more than two possible discrete outcomes, where each observation has several features.
 
 \section*{Contributions}
-This work implements a scenario in which there are some agents that estimate a cost function using their own information and those of other agents; they use a \textit{Distributed Sub-gradient Method} to update their own estimate and, in particular, they resolve a \textit{Multinomial Logistic Regression} problem.\\
+This work implements a scenario in which there are some agents that estimate a cost function using their own information and those of other agents; they use a \textit{Distributed Sub-gradient Method} to update their own estimates and, in particular, they resolve a \textit{Multinomial Logistic Regression} problem.\\
 
 The first step was to create a MATLAB script that solves a quadratic optimization problem using a gradient method. In this script it has been \textit{simulated} a distributed approach in order to test the effectiveness of the method saw in Distributed Subgradient Methods for Multi-Agent Optimization \cite{CITATION:1}. MATLAB was only used in the prototype phase, because it doesn't allow real parallel computations. After the confirmation that the approach was working, it started the implementation of the algorithm in Python3 using the Message Passing Interface.\\
 The quadratic form used was 
@@ -80,13 +80,13 @@ The quadratic form used was
 x^{T}Qx + r^{T}x
 \end{equation}. \\
 This form was used only to test the convergence of the method.\\
-After established that, considering that the Supervised Learning problem known as Multinomial Logistic Regression gives as output a probability value for every considered class, it was necessary to implement the softmax function. 
+After having established that, considering that the Supervised Learning problem known as Multinomial Logistic Regression gives as output a probability value for every considered class, it was necessary to implement the softmax function. 
 \begin{equation} \tag{II}
 g_i\left(\theta\right):=\sum_{k=1}^{K}{1\{y^{(i)}=e_k\}\log{\left( \frac{exp(\theta^{(k)^\top}x^{(i)})}{\sum_{k=1}^{K}{exp( \theta^{(j)^\top}x )}} \right)}}
 \end{equation} \cite{CITATION:3}. \\
 The formula saw in \ref{EQ1.7} was minimized in a centralized setup using MATLAB, and the result was compared to the one of the Python distributed program.\\
 It was seen that the algorithm was converging, several tests were executed to find the optimal values for the step-size.\\
-The present work is divided into two chapters. In Chapter \ref{Cap1}, it is introduced the theory behind the problem and it is visualized and commented the implementation code. In Chapter \ref{Cap2} there are the results of simulations with some considerations.
+The present work is divided into two chapters. In Chapter \ref{Cap1}, it is introduced the theory behind the problem, it is shown and commented the code. In Chapter \ref{Cap2} there are the results of simulations with some considerations.
 % \section*{Organization}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -107,7 +107,7 @@ where $f_i : \mathbb{R}^n \longrightarrow \mathbb{R}$ is the cost function of ag
 \item the cost function is convex;
 \item the agents are distributed over a time-varying topology;
 \item the graph $\left(V,E_\infty\right)$ is connected, where $E_\infty$ is the set of edges $\left(j,i\right)$ representing agent pairs communicating directly an indefinite number of times;
-\item there is not communication delay.
+\item there is no communication delay.
 \end{itemize} 
 Every agent $i$ generates and maintains an estimate of the optimal decision vector based on information concerning its own cost function and exchanges this estimate with its neighbours at discrete times $t_0, t_1, t_2, ...$. A weights matrix is associated to the communication graph, and its elements are defined as follows:
 \[
@@ -116,7 +116,7 @@ Every agent $i$ generates and maintains an estimate of the optimal decision vect
 		0, & \text{otherwise}
 	\end{cases}
 \]
-Each agent $j$ that receives an information by a neighbour agent $i$ weights this information by multiplying it by $a_i^j(k) \in \mathbb{R}$. Then the update of the estimate of the optimal solution is update according to:
+Each agent $j$ that receives an information by a neighbour agent $i$ weights this information by multiplying it by $a_i^j(k) \in \mathbb{R}$. Then the estimate of the optimal solution is updated according to:
 \begin{equation} \label{update}
 x^i\left(k+1\right) = \sum_{j=1}^{m}{a_j^i\left(k\right)x^i\left(k\right)-a^i\left(k\right)d_i\left(k\right)}
 \end{equation}
@@ -124,7 +124,7 @@ where $\alpha^i(k)>0$ is the step-size used by agent $i$ and the vector $d_i(k)$
 
 \subsection {Multinomial Logistic Regression} \label{Subsec1.1.2}
 The problem to be solved is a Supervised Learning problem called Multinomial Logistic Regression, also known as Softmax Regression, and it generalizes the more common Logistic Regression. The difference between them is that in the former there are several classes to be considered, in the latter, there are only two classes (or equivalently a binary class).\\
-The problem to be solved is to find a set of coefficients based on a given dataset to predict the belonging class for an unseen set of features, while minimizing a cost function. The dataset is composed of \textit{N} labelled examples $\{(x^{(1)}, y^{(1)}), ..., (x^{(N)}, y^{(N)})\}$. Each $x^{(i)} \in R^{d_{x}}$ for $i=1, ..., N$ is composed of some features which represent the value upon which we base the estimation of the belonging class, while $y^{(i)} \in R^{d_{y}}$ is the belonging class for the \textit{i-th} example, and can be a values in $\{1, ..., K\}$.
+The problem to be solved is to find a set of coefficients based on a given dataset to predict the belonging class for an unseen set of features, while minimizing a cost function. The dataset is composed of \textit{N} labelled examples $\{(x^{(1)}, y^{(1)}), ..., (x^{(N)}, y^{(N)})\}$. Each $x^{(i)} \in R^{d_{x}}$ for $i=1, ..., N$ is composed of some features which represent the value upon which is based the estimation of the belonging class, while $y^{(i)} \in R^{d_{y}}$ is the belonging class for the \textit{i-th} example, and can be a values in $\{1, ..., K\}$.
 
 Given a single training example $(x^{(i)}, y^{(i)})$, the definition of the cost function is:
 \begin{equation}
@@ -134,7 +134,7 @@ where the $\omega \in R^{d_{x}}$ are the weights of the hypothesis function $h_{
 \begin{equation}
 f\left(\omega\right):=\sum_{i=1}^{N}{f_i\left(\omega\right)}
 \end{equation}
-We solve the problem by finding the solution of the following optimization problem:
+The problem is solved by finding the solution of the following optimization problem:
 \begin{equation}
 \omega^*:=\arg\min_\omega f\left(\omega\right)
 \end{equation}
@@ -179,8 +179,8 @@ where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION
 
 \section {Code Implementation} \label{Sec1.2}
 
-Here is defined and explained the Python imlementation that solves the problem. The solution has been
-implemented using: $numpy$ library which computes all vector and matrix operation such as transposition, product, division,
+Here is defined and explained the Python implementation that solves the problem. The solution has been
+implemented using: $numpy$ library which computes all vector and matrix operations such as transposition, product, division,
 summation; $networkx$ which creates and manages adjacency matrices for all agent; $matplotlib$ that plots the results
 with data from the test and training phases. At first, the code checks if all the paramethers are valid,
 then it starts to create the environment, the adjacency matrix and it initializes the local variables where
@@ -207,9 +207,9 @@ computed as follows:
 Loss softmax function,\textit{loss\_softmax} gets as parameter the current state(\textit{all\_theta}), the cardinality of
 iris set (\textit{category\_count}), the agent dataset (\textit{personal\_dataset}) and a \textit{CONSTANT\_TO\_SUBTRACT}, a
 constant to prevent overflow.\\
-The algorithm wants to calculate the $\displaystyle\sum_{i=0}^{number\_of\_agents} f_{i}(x)$ and this function calculate the
-agent \textit{i} $f(x)$. This is done as follows: for every row in the personal dataset, the algorithm computes the
-denominator that is the sum over all exponential. Then it computes, category by category, row by row, the logarithm of ratio
+The algorithm wants to calculate the $\displaystyle\sum_{i=0}^{number\_of\_agents} f_{i}(x)$ and this function calculates the $f(x)$ of the
+agent \textit{i} . This is done as follows: for every row in the personal dataset, the algorithm computes the
+denominator that is the sum over all exponential. Then it computes, category by category, row by row, the logarithm of the ratio
 between the sum previously calculated and the exponential of the row. After that, there's the summation of all calculated
 elements.
 
@@ -233,9 +233,9 @@ def loss_softmax(all_theta, category_count, personal_dataset, CONSTANT_TO_SUBTRA
     return the_sum
 \end{lstlisting}
 
-In the function \textit{gradient\_softmax} there is implemented the gradient of softmax equation. It is calculated similarly as the function mentioned before: calculate in a first time the sum of all exponential theta and then sum for
-each coefficient, subtract from one that coefficient and finally subtract the dataset normalized with that to the respective
-theta.
+In the function \textit{gradient\_softmax} there is implemented the gradient of softmax equation. It is calculated similarly as the function mentioned before:  it calculates at first the sum of all exponential theta and then it sums for
+each coefficient. It subtracts from one that coefficient and finally subtract the dataset normalized with that to the respective
+theta. TODO l'ultima frase non la capisco.
 
 \begin{lstlisting}
 def gradient_softmax(all_theta, category_count):
@@ -263,21 +263,22 @@ def gradient_softmax(all_theta, category_count):
 
 \subsection {working.py}
 
-In this file is implemented the main algorithm where the loss function is minimized and the consensus is reached.\\
+In this file it is implemented the main algorithm where the loss function is minimized and the consensus is reached.\\
 
 The complete iris training set is loaded, and some environment variables are setted like the number of agents. Then the dataset is splitted in equal parts to all agents and each one gets its own piece and it prints how many row it has.
 
 Every agent creates the same communication directed graph with number of agents and number of in connection. Then state and
-loss variable are created, setted to 0 of \textit{MAX\_ITERATIONS} size. In order to get weight the messages, all in-neighbours
+loss variables are created, setted to 0 of \textit{MAX\_ITERATIONS} size. In order to get weight the messages, all in-neighbours
 are found and the variable \textit{weight} is setted as the average. If the function name inserted is "quadratic" Q and r
 variables are created randomly. \textit{epsilon\_reached} and \textit{buff} are epsilon checker variable that say to agent
-when they have to exit from the loop (if epsilon is reached).
+when they have to exit from the loop (if an accuracy better then epsilon is reached).
 
 
 This $for$ cycle calculates the consensus. For every $iters$, is calculated the new "diminishing" alpha; message(s) are sent
-and received, then local variable are weighted. In order to solve consensus to desiderated function, the three implemented
-ones are inserted into an $if$ clause, and the right function is called. After that, the calculated gradient is multiplied by
-alpha and then new state is calculated. Then $loss function$ is called and if $\left\lVert XX[tt] - XX[tt-1] \right\rVert
+and received, then local variables are weighted.
+An $if$ clause allows to choose how to solve the consensus, with one of the implemented functions.
+After that, the calculated gradient is multiplied by
+alpha and then the new state is calculated. Then $loss function$ is called and if $\left\lVert XX[tt] - XX[tt-1] \right\rVert
 \leq epsilon$ then buff is true and rank 0 check if all agent has reached the epsilon condition; if true it sends a broadcast 
 message with a $true$ value to say to all that the cycle is done.
 
