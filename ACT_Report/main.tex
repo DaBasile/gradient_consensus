@@ -373,7 +373,7 @@ calculations and plot result.
 	To verify the correctness of the software, a couple of simulations were run, divided into two parts:
 \begin{itemize}
 	\item Minimization of the Softmax function to prove the convergence to the optimal value
-	\item Application of the minimization algorithm to find the optimal coefficients and prediction on the test dataset
+		\item Application of the minimization algorithm to find the best coefficients to do the best predictions on the test dataset
 \end{itemize}
 
 \section{Minimization of the Softmax function}
@@ -392,10 +392,15 @@ For completing this simulation, a diminishing step-size has been used, with the 
 with $k$ indicating the current iteration.\\
 The problem to be solved is the one formulated in \ref{EQ1.7}. Let's suppose to indicate the whole dataset as $S$. Each agent $i$ can access to a limited set $s_i$ of examples contained in $S$. To each agent is given a set $s_i$, chosen as:
 \begin{equation}
-	\label{dataset_condition}
+	\label{dataset_condition_union}
 	S = \bigcup\limits_{i=1}^{17} s_i
 \end{equation}
-In the simulation, the training set $S$ is composed by 120 examples, split into set $s_i$ of 6 or 7 examples, chosen in order to equation \ref{dataset_condition} hold.  \\
+and 
+\begin{equation}
+\label{dataset_condition_intersection}
+\bigcap\limits_{i=1}^{17} s_i = \emptyset
+\end{equation}
+In the simulation, the training set $S$ is composed by 120 examples, split into sets $s_i$ of 6 or 7 examples, chosen in order to equation \ref{dataset_condition_union} and \ref{dataset_condition_intersection} hold.  \\
 The iterations run are 15000, sufficient enough to see the function approaching the convergence, but not sufficient enough to reach the minimum value of the function, calculated with MATLAB to be $8.945$. The figure \ref{log_cost} shows in a logarithmic scale how the algorithm tends to minimize the cost value at each iteration. \\
 \begin{figure}[hb]
 	\centering
@@ -415,7 +420,7 @@ The value of the cost function is shown in figure \ref{lin_cost} in a linear sca
 
 As can be seen in figure \ref{avg_consensus}, all the agents try to reach the consensus for each component of the local minimum of the problem. 
 
-To better see the consensus, in this simulation the initial condition have been chosen to be random integer number between $-10$ and $+10$. With this choice is more visible the trend if the agents that try to reach consensus.
+To better see the consensus, in this simulation the initial condition have been chosen to be random integer number between $-10$ and $+10$. With this choice is more visible the trend of the agents that try to reach consensus.
 
 \begin{figure}[ht]
 	\centering
@@ -437,35 +442,41 @@ To better see the consensus, in this simulation the initial condition have been 
 
 
 \section{Dataset, graph description and minimization function} \label{Sec2.1}
-This dataset is composed of 150 instances, 120 used for training, the rest for tests. The instances contain 3 classes, each representing a type of Iris flower. Every instance has 4 features, sepal length, sepal width, petal length, petal width expressed in $cm$. We tried different types of graphs. These graphs are all strongly connected and the weight matrices for the nodes are doubly stochastic, as per the assumptions of convergence of the algorithm described in Chapter \ref{Cap1}. The results discussed in this chapter, if not differently noted, refer to cyclic graphs with a variable number of nodes. The program can minimize all kinds of loss functions. As shown in Chapter \ref{Sec1.2}, the quadratic and exponential functions can also be used. These last 2 functions don't guarantee useful results and/or convergence. The minimization function used in this chapter is the one described in Chapter \ref{Subsec1.1.2}, softmax.
+This dataset is composed of 150 instances, 120 of them used for training while the remaining 30 used for testing purpose. The instances contain 3 classes, each representing a type of Iris flower. Every instance has 4 features: sepal and petal length, sepal and petal width, expressed in $cm$. We tried different types of graphs, all of them chosen to be strongly connected. The results discussed in this chapter, if not differently noted, refer to cyclic graphs with a variable number of nodes. The program can minimize all kinds of loss functions. As shown in Chapter \ref{Sec1.2}, the quadratic and exponential functions can also be optimized, even if they don't guarantee useful results to apply to our problem. The minimization function used in this chapter is the one described in Chapter \ref{Subsec1.1.2}.
 
 \section{Performance} \label{Sec2.2}
-There are some key factors that influence \textit{the computational time}, \textit{the numbers of iterations necessary} and \textit{the accuracy of the results}.\\
+There are some key factors that influence \textit{the computational time}, \textit{the numbers of iterations necessary} and \textit{the accuracy of the results}. They are, but not limited to, number of nodes, type of graph, step-size type and value, etc. \\
 
 \subsection{Number of nodes} \label{Subsec2.2.1}
 The Python program, thanks to the MPI platform, is capable of running on an arbitrary number of nodes. It was tested on as little as 2 nodes to as many as 60 nodes, which means that every node was processing the data of 2 instances (120 instances divided into 60 nodes). The best performances are obtained when the number of nodes corresponds to the number of physical cores of the machine where it runs. When the number of nodes exceeds greatly the number of physical cores, the resources are oversubscribed. In this case, the performances degrade notably as the nodes compete for cache and memory and the processors' schedulers are put in a difficult situation. On a 4-core test machine, a computation with 5000 iterations and 30 nodes is done in 5 minutes. The same machine can do the same number of iterations, but with 60 nodes, in 15 minutes. Therefore, to show the scalability of the software,  the following tests will be shown on a 4 nodes set-up and a 17 nodes setup (the same of figure 2.1) . \\
 
 \subsection{Epsilon} \label{Subsec2.2.2}
-This is a small constant used as stop condition. If the result of the current calculation differs less than epsilon from the previous, the algorithm is stopped.
+This is a small constant used as stop condition. If the norm of the result of the current calculation differs less than $\epsilon$ (chosen arbitrary small) from the previous, the algorithm is stopped. This is used as convergence stop condition. In fact, given the nature of the method used to minimize the cost function, the converge to the optimal value can be reached in a huge amount of time. To prevent this from happening, it has been used this condition.
 
 \subsection{Learning rate} \label{Subsec2.2.3}
-The step-size alpha plays a big role in the speed of convergence of the algorithm. There are 3 kinds of step-size. Fixed, diminishing and adaptive (Armijo). For reasons not discussed in this paper, it's not possible to use Armijo rule in a distributed problem.
+The step-size plays a big role in the speed of convergence of the algorithm. There are 3 kinds of step-size:
+\begin{enumerate}
+	\item fixed step-size: it has always the same value, which means $\alpha^{k+1} = \alpha^k$
+	\item diminishing step-size: chosen such that $\alpha^{k+1} < \alpha^k$
+	\item adaptive step-sizes: chosen with respect to Armijo or (limited) minimization rule.
+\end{enumerate}
+For reasons not discussed in this paper, it's not possible to use the last type of rules in a distributed problem, so the first two types have been used in these simulations.
 
 \subsection{Initial condition} \label{Subsec2.2.4}
-The agents should start with an initial condition, expressed in the code with x0. This initial condition is the state from which the agents start to compute. The program was tested with random initial conditions for all agents and the consensus was still reached. The garantee the repeatability of the experiments, the initial condition in the tests is always set to 1.
+The agents start from an initial condition $x_0$, which represents a guess of the optimal value. The program was tested with random initial conditions for all agents and the consensus was still reached. To guarantee the repeatability of the experiments, the initial condition in the tests is always set to a matrix full of ones.
 
 \section{Four Nodes Setup} \label{Sec2.2}
 
 
 \subsection{Fixed step-size} \label{Subsec2.2.4}
- We will first deal with a simpler fixed step-size. With an epsilon equal to $0.001\  (10^{-3})$:\\
+ We will first deal with a simple fixed step-size such as $\alpha^k = \alpha$, with $\epsilon = 10^{-3}$ equal to:\\
 \begin{scriptsize}
 \begin{center}
 \begin{tabular}{|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|}
 \hline
-\textbf{Value of fixed step-size} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses o.30}\\
+\textbf{$\alpha$} & \textbf{Iteration required} & \textbf{Execution time in s} & \textbf{Wrong guesses}\\
 \hline\hline
-0.5 & overflow & alpha too big & -\\
+0.5 & overflow occurred & - & -\\
 \hline
 0.1 & \textgreater 10000 & \textgreater 15 & 2\\
 \hline
@@ -485,14 +496,13 @@ The agents should start with an initial condition, expressed in the code with x0
 \end{center}
 \end{scriptsize}
 
-These results show a general truth about the step-size. If it is too little, the learning process proceeds in a very slow way and it requires a huge amount of iterations. If the learning rate is too high, the gradient descent will most probably overshoot the minimum and it will not converge. Through trial and error, the step-size 0.001 was identified, it allows reaching good performance and accuracy. In fact, in only 3.1 seconds, we can make predictions with no errors, using our 30 instances test dataset.
+These results show a general truth about the step-size. If it is too little, the learning process proceeds in a very slow way and it requires a huge amount of iterations. If the learning rate is too high, the gradient descent will most probably overshoot the minimum and it will not converge.\\
+Through trial and error, the step-size $0.001$ was chosen. It allows to reach good performances and the best accuracy: only 3.1 seconds are required to obtain 0 errors over the test dataset.
 
 \subsection{Diminishing step-size} \label{Subsec2.2.5}
-The diminishing step-size implemented in the code is in this form:
-TODO: SISTEMARE FORMULA
-\\
+The diminishing step-size implemented is chosen to be:
 \begin{equation}
-\alpha = const \left( \frac{1}{tt} \right) exp
+\alpha = \psi \left( \frac{1}{k} \right)^{\gamma}
 \end{equation}
 Again, several tests were run by tweaking the multiplying constant and the exponent.\\ \\
 
@@ -500,7 +510,7 @@ Again, several tests were run by tweaking the multiplying constant and the expon
 \begin{center}
 \begin{tabular}{|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|}
 \hline
-\scriptsize{\textbf{psi\_coeff}} & \scriptsize{\textbf{alpha\_exp coefficient}} & \scriptsize{\textbf{Iteration required}} & \scriptsize{\textbf{Execution time in s}} & \scriptsize{\textbf{Wrong guesses o. 30}}\\
+\scriptsize{\textbf{$\psi$}} & \scriptsize{\textbf{$\gamma$}} & \scriptsize{\textbf{Iteration required}} & \scriptsize{\textbf{Execution time in s}} & \scriptsize{\textbf{Wrong guesses}}\\
 \hline \hline
 1 & 0.01 & overflow & - & -\\
 \hline
@@ -520,15 +530,14 @@ Again, several tests were run by tweaking the multiplying constant and the expon
 \end{center}
 \end{scriptsize}
 
-\noindent The best result is obtained in only 349 iterations, with 0.1 and 0.5 as multiplicative constant and exponent respectively. This is done in roughly half of a second, obtaining no error. The accuracy is worst then the previous result, but this is obtained in a fraction of the time needed to obtain 0 error with a fixed step-size. A difference of 2 or 3 seconds may not seem important using the Iris Dataset, with a small amount of calculations. In a set-up where a bigger number of calculations and bigger dataset are involved, one may appreciate the advantages of this faster approach.
+\noindent The best result is obtained in only 349 iterations, with $\psi = 0.1$ and $\gamma = 0.5$. This is done in roughly half of a second, obtaining no error. The accuracy is worst then the previous result, but this is obtained in a fraction of the time needed to obtain 0 error with a fixed step-size. A difference of 2 or 3 seconds may not seem important using the Iris Dataset, with a small amount of calculations. In a set-up where a bigger number of calculations and a bigger dataset are involved, one may appreciate the advantages of this faster approach.
 
 
 
 \section{Seventeen Nodes Setup} \label{Sec2.2}
-These are the results for the setup shown in figure 2.1. \\
-The computation times are greatly larger, the tests were executed on a quad-core machine, MPI oversubscribed the resources and the CPU scheduler was put at hard work. \\
-The results are still very interesting. \\
-The optimal step-size is different from the ideal step-size of the 4 nodes setup. Only through several tests and experience is possible to find a good step-size.
+The following results are the ones for the set-up shown in fig. \ref{graph_17_agents}. \\
+The computation times are greatly larger than the ones shown earlier. This is because the tests involving 17 agents are carried out on a quad-core machine, which means that MPI oversubscribe the resources and the CPU scheduler are put at hard work. \\
+The optimal step-size is different from the ideal step-size of the 4 nodes set-up. Only through several tests and experience is possible to find a good step-size to reduce the errors in the best way.
 
 
 
@@ -536,7 +545,7 @@ The optimal step-size is different from the ideal step-size of the 4 nodes setup
 \begin{center}
 \begin{tabular}{|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|>{\centering\arraybackslash}m{1.7cm}|}
 \hline
-\scriptsize{\textbf{psi\_coeff}} & \scriptsize{\textbf{alpha\_exp coefficient}} & \scriptsize{\textbf{Iteration required}} & \scriptsize{\textbf{Execution time in s}} & \scriptsize{\textbf{Wrong guesses o. 30}}\\
+\scriptsize{\textbf{$\psi$}} & \scriptsize{\textbf{$\gamma$}} & \scriptsize{\textbf{Iteration required}} & \scriptsize{\textbf{Execution time in s}} & \scriptsize{\textbf{Wrong guesses}}\\
 \hline \hline
 0.1 &  0.1 & \textgreater 10000 & \textgreater 440 & 2\\
 \hline
@@ -575,7 +584,7 @@ TODO: AGGIUNGERE GRAFICI
 %%%%% SVILUPPI FUTURI %%%%%%
 \chapter*{Conclusions} % and future developments}
 \addcontentsline{toc}{chapter}{Conclusions} %  and future developments}
-In this work it has been resolved a Multinomial Logistic Regression problem using MPI in Python. Each agent used a Distributed Sub-gradient method to update its own estimate of optimal solution.
+In this work it has been resolved a Multinomial Logistic Regression problem using MPI in Python. Each agent use a Distributed Sub-gradient method to update its own estimate of the optimal solution. At the end of the iterations, all the agents converge to the same solution.
 %% Tutte le considerazioni finali sintetiche si fanno in base alla tabella dei risultati del capitolo 2.
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 
