@@ -37,7 +37,6 @@
     belowskip=2em,
 }
 
-
 \begin{document}
 \pagestyle{myheadings}
 
@@ -102,14 +101,14 @@ In this problem there are $m$ agents that cooperatively minimize a common additi
 \begin{equation} \label{costfunct}
 min \quad \sum\limits_{i=1}^{m} f_{i} \left( x \right) \qquad subject \ to \quad x \in \mathbb{R}^n,
 \end{equation}
-where $f_i : \mathbb{R}^n \longrightarrow \mathbb{R}$ is the cost function of agent $i$, known only by the agent $i$, and $x \in \mathbb{R^n}$ is the decision vector. It is assumed that:
+where $f_i : \mathbb{R}^n \longrightarrow \mathbb{R}$ is the cost function of agent $i$, known only by the agent $i$, and $x \in \mathbb{R}^n$ is the decision variable. It is assumed that:
 \begin{itemize} 
 \item the cost function is convex;
 \item the agents are distributed over a time-varying topology;
 \item the graph $\left(V,E_\infty\right)$ is connected, where $E_\infty$ is the set of edges $\left(j,i\right)$ representing agent pairs communicating directly an indefinite number of times;
 \item there is no communication delay.
 \end{itemize} 
-Every agent $i$ generates and maintains an estimate of the optimal decision vector based on information concerning its own cost function and exchanges this estimate with its neighbours at discrete times $t_0, t_1, t_2, ...$. A weights matrix is associated to the communication graph, and its elements are defined as follows:
+Each agent $i$ generates and maintains an estimate of the optimal decision variable based on the gradient of its own cost function and the exchanged estimates of its neighbours at discrete times $t_0, t_1, t_2, ...$. A weights matrix is associated to the communication graph, and its elements are defined as follows:
 \[
 	\begin{cases}
 		> 0, & \text{if } (i,j) \in E(k) \\
@@ -118,13 +117,13 @@ Every agent $i$ generates and maintains an estimate of the optimal decision vect
 \]
 Each agent $j$ that receives an information by a neighbour agent $i$ weights this information by multiplying it by $a_i^j(k) \in \mathbb{R}$. Then the estimate of the optimal solution is updated according to:
 \begin{equation} \label{update}
-x^i\left(k+1\right) = \sum_{j=1}^{m}{a_j^i\left(k\right)x^i\left(k\right)-a^i\left(k\right)d_i\left(k\right)}
+x^i\left(k+1\right) = \sum_{j=1}^{m}{a_j^i\left(k\right)x^i\left(k\right)-\alpha^i\left(k\right)d_i\left(k\right)}
 \end{equation}
-where $\alpha^i(k)>0$ is the step-size used by agent $i$ and the vector $d_i(k)$ is a sub-gradient of objective function $f_i(x)$ calculated at $x=x^i(k)$. \cite{CITATION:1}
+where $\alpha^i(k)>0$ is the step-size used by agent $i$ and the vector $d_i(k)$ is a sub-gradient of the objective function $f_i(x)$ calculated at $x=x^i(k)$. \cite{CITATION:1}
 
 \subsection {Multinomial Logistic Regression} \label{Subsec1.1.2}
 The problem to be solved is a Supervised Learning problem called Multinomial Logistic Regression, also known as Softmax Regression, and it generalizes the more common Logistic Regression. The difference between them is that in the former there are several classes to be considered, in the latter, there are only two classes (or equivalently a binary class).\\
-The problem to be solved is to find a set of coefficients based on a given dataset to predict the belonging class for an unseen set of features, while minimizing a cost function. The dataset is composed of \textit{N} labelled examples $\{(x^{(1)}, y^{(1)}), ..., (x^{(N)}, y^{(N)})\}$. Each $x^{(i)} \in R^{d_{x}}$ for $i=1, ..., N$ is composed of some features which represent the value upon which is based the estimation of the belonging class, while $y^{(i)} \in R^{d_{y}}$ is the belonging class for the \textit{i-th} example, and can be a values in $\{1, ..., K\}$.
+The problem to be solved is to find a set of coefficients based on a given dataset to predict the belonging class for an unseen set of features, while minimizing a cost function. The dataset is composed of \textit{N} labelled examples $\{(x^{(1)}, y^{(1)}), ..., (x^{(N)}, y^{(N)})\}$. Each $x^{(i)} \in R^{d_{x}}$ for $i=1, ..., N$ is composed of some features which represent the value upon which is based the estimation of the belonging class, while $y^{(i)} \in R^{d_{y}}$ is the belonging class for the \textit{i-th} example, and can be a value in $\{1, ..., K\}$.
 
 Given a single training example $(x^{(i)}, y^{(i)})$, the definition of the cost function is:
 \begin{equation}
@@ -142,16 +141,16 @@ In the Multinomial Logistic Regression, a common choice for the hypothesis funct
 \begin{equation}
 h_\theta=\frac{1}{\sum_{j=1}^{K}{exp\left(\theta^{(j)^\top}x\right)}}\begin{bmatrix}exp\left(\theta^{(1)\top}x\right)  \\ \vdots \\ exp\left(\theta^{(K)\top}x\right) \end{bmatrix}
 \end{equation}
-where the weights $\omega = \theta = (\theta^{(1)}, ..., \theta^{(K)}) \in R^{d_{x}}$. \\
-Using this function, the solution of the problem is given by finding:
+where the weights $\omega = \theta = (\theta^{(1)}, ..., \theta^{(K)}) \in R^{{d_{x}} \times K }$. \\
+It can be shown that the previous problem is equivalent to the following:
 \begin{equation}\label{EQ1.7}
 \theta^*=\arg\min_\theta -\sum_{i=1}^{N}{g_i(\theta)}
 \end{equation}
 with
 \begin{equation} \label{EQ1.8}
-g_i\left(\theta\right):=\sum_{k=1}^{K}{1\{y^{(i)}=e_k\}\log{\left( \frac{exp(\theta^{(k)^\top}x^{(i)})}{\sum_{k=1}^{K}{exp( \theta^{(j)^\top}x )}} \right)}}
+g_i\left(\theta\right):=\sum_{k=1}^{K}{1\{y^{(i)}=e_k\}\log{\left( \frac{exp(\theta^{(k)^\top}x^{(i)})}{\sum_{j=1}^{K}{exp( \theta^{(j)^\top}x )}} \right)}}
 \end{equation}
-where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION:2}
+with \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION:2}
 
 \subsection {Pseudocode} \label{Subsec1.1.3}
 \begin{algorithm}
@@ -179,64 +178,83 @@ where \textbf{1\{$\cdot$\}} being the \textit{indicator function}.\cite{CITATION
 
 \section {Code Implementation} \label{Sec1.2}
 
-Here is defined and explained the Python implementation that solves the problem. The solution has been
-implemented using: $numpy$ library which computes all vector and matrix operations such as transposition, product, division,
-summation; $networkx$ which creates and manages adjacency matrices for all agent; $matplotlib$ that plots the results
-with data from the test and training phases. At first, the code checks if all the paramethers are valid,
-then it starts to create the environment, the adjacency matrix and it initializes the local variables where
-the data will be saved. The weights depend on how many in-neighbours each agent has. The number of in-neighbours for each agent can be passed as a paramether at launch, by specifying it with -k . \\
+In this section it will be explained the Python implementation that solves the given problem. The solution has been implemented using the following libraries:
+\begin{itemize}
+	\item  \textit{numpy} which computes all vector and matrix operations such as transposition, product, division,
+	summation
+	\item \textit{networkx} which creates and manages the adjacency matrices for all the agents
+	\item \textit{matplotlib} that plots the results
+	of the tests and the communication graph.
+\end{itemize}
 
+\subsection{Creation of the communication graph}
+The first thing done by the algorithm is to check if all the parameters are valid,
+then it starts to create the environment variable used by \textit{MPI}, the adjacency matrix and the local variables where data will be saved. The weights depend on how many in-neighbours each agent has. \\
+
+\textcolor{red}{
 The adjacency matrix is created by the \textit{createAdjM} function. It makes a communication graph using world\_d as number of
 mpi agents, n\_edges  (setted by default as 1), phi that is simply a phase inserted into
 graph which just shift the connection, by default is 0 (TODO: la parte di phi non mi convince). The first $for$
 cycle sets the number of agents that the system has, then edges are
-computed as follows:
+computed as follows:}
 \begin{itemize}
-    \item The sum j + k + phi + 1 means the position of edge in the
-    graph where item j is the current row, k is the count of agent 
-    that the agent j will send a message, phi is the phase and just
-    shift the agent that j will send a message and the "+1" 
+    \item \textcolor{red}{The sum j + k + phi + 1 means the position of edge in the
+    	graph where item j is the current row, k is the count of agent 
+    	that the agent j will send a message, phi is the phase and just
+    	shift the agent that j will send a message and the "+1" }
 
-    \item The instruction $ if \ e >= world\_d $  checks if the sum is over the number of
-    agents and if is true just subtracts this one
+    \item \textcolor{red}{The instruction $ if \ e >= world\_d $  checks if the sum is over the number of
+    agents and if is true just subtracts this one}
 
-    \item Instead $ if \ e \ $==$ \  j $ removes the hypothetical unnecessary self loop.
+    \item \textcolor{red}{Instead $ if \ e \ $==$ \  j $ removes the hypothetical unnecessary self loop.}
 \end{itemize}
 
-
-Loss softmax function,\textit{loss\_softmax} gets as parameter the current state(\textit{all\_theta}), the cardinality of
-iris set (\textit{category\_count}), the agent dataset (\textit{personal\_dataset}) and a \textit{CONSTANT\_TO\_SUBTRACT}, a
-constant to prevent overflow.\\
-The algorithm wants to calculate the $\displaystyle\sum_{i=0}^{number\_of\_agents} f_{i}(x)$ and this function calculates the $f(x)$ of the
-agent \textit{i} . This is done as follows: for every row in the personal dataset, the algorithm computes the
-denominator that is the sum over all exponential. Then it computes, category by category, row by row, the logarithm of the ratio
-between the sum previously calculated and the exponential of the row. After that, there's the summation of all calculated
-elements.
+\subsection{Loss function calculation}
+The loss function (described in Eq. \ref{EQ1.7}) is implemented in the Python function called \textit{loss\_softmax}. It has three parameters:\\
+\begin{itemize}
+	\item \textit{all\_theta}: the matrix with the current estimation of $\Theta^*$
+	\item \textit{category\_count}: the number of categories in the dataset. In the IRIS dataset is $3$
+	\item \textit{personal\_dataset}: represents the dataset accessible to the considered agent
+\end{itemize}
+The only addition to the function is the calculation of the \textit{const\_to\_subtract}, a constant used to prevent the overflow. The property used to justify the use of this method is the following:
+\begin{equation}
+	\dfrac{e^a}{e^b} = \dfrac{e^{a-c}}{e^{b-c}}
+\end{equation}
+where $c$ represent the constant to subtract and it is calculated as
+\begin{equation}
+	c = max \left\{ \Theta^{1^\top}x, \dots,  \Theta^{K^\top}x \right\}
+\end{equation}
 
 \begin{lstlisting}
-def loss_softmax(all_theta, category_count, personal_dataset, CONSTANT_TO_SUBTRACT):
+def loss_softmax(all_theta, category_count, personal_dataset):
     the_sum = 0
-
     for index in range(0, len(personal_dataset)):
         denominator = 0
-
+        const_to_subtract = find_const_to_subtract(all_theta, personal_dataset[index][0:4])
+		
         for theta in all_theta:
-            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][0:4]) - CONSTANT_TO_SUBTRACT)
-
+            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][0:4]) - const_to_subtract)
+		
         for category in range(0, category_count):
-
             if category == personal_dataset[index][4]:
-                _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
+                _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]) - const_to_subtract)
                 _log = np.log(np.divide(_exp, denominator))
                 the_sum = the_sum - _log
-
-    return the_sum
+	
+	return the_sum
 \end{lstlisting}
 
-In the function \textit{gradient\_softmax} there is implemented the gradient of softmax equation. It is calculated similarly as the function mentioned before:  it calculates at first the sum of all exponential theta and then it sums for
-each coefficient. It subtracts from one that coefficient and finally subtract the dataset normalized with that to the respective
-theta. TODO l'ultima frase non la capisco.
+This function could be omitted because it is not needed for solving the problem. It is used only for debug purpose as it is needed to draw the graphics of the overall loss function and to demonstrate that the cost gets minimized.
 
+\subsection{Gradient calculation}
+Given the nature of the method used to solve the problem, this is the most important piece of software. The gradient of the cost function has been calculated to be:
+\begin{equation}
+	\nabla_{\Theta^{(k)}}J(\Theta) = - \sum_{i=1}^{m} \left[ x^{(i)} \left( 1 \left\{ y^{(i)}=k \right\} -     \dfrac{exp\left(\Theta^{(k)^{\top}}x^{(i)} \right)}{ \sum_{j=1}^{K} exp\left(\Theta^{(j)^{\top}}x^{(i)} \right)}      \right) \right]
+	\label{gradient_softmax}
+\end{equation}
+
+The Python function \textit{gradient\_softmax} calculate the value of the equation \ref{gradient_softmax}, using the same method saw in the previous section to prevent overflow.
+\textcolor{red}{substitute the following with an updated version!}
 \begin{lstlisting}
 def gradient_softmax(all_theta, category_count):
 
