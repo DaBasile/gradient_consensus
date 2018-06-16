@@ -8,7 +8,7 @@
 \BOOKMARK [2][-]{subsection.1.2.1}{Creation of the communication graph}{section.1.2}% 8
 \BOOKMARK [2][-]{subsection.1.2.2}{Loss function calculation}{section.1.2}% 9
 \BOOKMARK [2][-]{subsection.1.2.3}{Gradient calculation}{section.1.2}% 10
-\BOOKMARK [2][-]{subsection.1.2.4}{working.py}{section.1.2}% 11
+\BOOKMARK [2][-]{subsection.1.2.4}{Reaching consensus}{section.1.2}% 11
 \BOOKMARK [0][-]{chapter.2}{Results of simulations}{}% 12
 \BOOKMARK [1][-]{section.2.1}{Minimization of the Softmax function}{chapter.2}% 13
 \BOOKMARK [1][-]{section.2.2}{Dataset, graph description and minimization function}{chapter.2}% 14

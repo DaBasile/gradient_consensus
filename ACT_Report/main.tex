@@ -254,102 +254,122 @@ Given the nature of the method used to solve the problem, this is the most impor
 \end{equation}
 
 The Python function \textit{gradient\_softmax} calculate the value of the equation \ref{gradient_softmax}, using the same method saw in the previous section to prevent overflow.
-\textcolor{red}{substitute the following with an updated version!}
+
 \begin{lstlisting}
-def gradient_softmax(all_theta, category_count):
+def gradient_softmax(all_theta, category_count, dimensions, personal_dataset, normalized):
 
     thetas = np.zeros(dimensions)
 
+    if normalized:
+        m = len(personal_dataset)
+    else:
+        m = 1
+
     for index in range(0, len(personal_dataset)):
         denominator = 0
+        const_to_subtract = find_const_to_subtract(all_theta, personal_dataset[index][0:4])
 
         for theta in all_theta:
-            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
+            denominator = denominator + np.exp(np.dot(theta, personal_dataset[index][:4]) - const_to_subtract)
 
         for category in range(0, category_count):
             coeff = 0
-
             if category == personal_dataset[index][4]:
                 coeff = 1
-
-            _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]) - CONSTANT_TO_SUBTRACT)
+            _exp = np.exp(np.dot(all_theta[category], personal_dataset[index][:4]) - const_to_subtract)
             coeff = coeff - np.divide(_exp, denominator)
-            thetas[category] = thetas[category] - ((1/len(personal_dataset)) * np.multiply(personal_dataset[index][:4], coeff))
-
+            thetas[category] = thetas[category] - ((1 / m) * np.multiply(personal_dataset[index][:4], coeff))
     return thetas
 \end{lstlisting}
 
-\subsection {working.py}
+\subsection {Reaching consensus}
 
-In this file it is implemented the main algorithm where the loss function is minimized and the consensus is reached.\\
+In this section in will be explained how the consensus is reached.\\
 
-The complete iris training set is loaded, and some environment variables are setted like the number of agents. Then the dataset is splitted in equal parts to all agents and each one gets its own piece and it prints how many row it has.
-
-Every agent creates the same communication directed graph with number of agents and number of in connection. Then state and
-loss variables are created, setted to 0 of \textit{MAX\_ITERATIONS} size. In order to get weight the messages, all in-neighbours
-are found and the variable \textit{weight} is setted as the average. If the function name inserted is "quadratic" Q and r
-variables are created randomly. \textit{epsilon\_reached} and \textit{buff} are epsilon checker variable that say to agent
-when they have to exit from the loop (if an accuracy better then epsilon is reached).
-
-
-This $for$ cycle calculates the consensus. For every $iters$, is calculated the new "diminishing" alpha; message(s) are sent
-and received, then local variables are weighted.
-An $if$ clause allows to choose how to solve the consensus, with one of the implemented functions.
-After that, the calculated gradient is multiplied by
-alpha and then the new state is calculated. Then $loss function$ is called and if $\left\lVert XX[tt] - XX[tt-1] \right\rVert
-\leq epsilon$ then buff is true and rank 0 check if all agent has reached the epsilon condition; if true it sends a broadcast 
-message with a $true$ value to say to all that the cycle is done.
+The distributed sub-gradient method is an iterative algorithm, so it make use of a cycle in which the calculations are made. In the Python script there is a constant, called \textit{MAX\_ITERATIONS}, that represents the limit of iterations that can be made. \\
+The first thing done in the cycle is the calculation of the step-size, basing the computation on the type chosen from the command line argument.
 
 \begin{lstlisting}
-for tt in range(1, MAX_ITERATIONS - 1):
-
     if alpha_type == "diminishing":
         alpha = psi_coefficient * (1 / tt) ** alpha_coefficient
     else:
         alpha = alpha_coefficient
+\end{lstlisting}
+If a diminishing step-size is chosen, then the formula implemented is
+\begin{equation}
+	\alpha_t = \psi \left( \dfrac{1}{t} \right)^\gamma
+\end{equation}
+otherwise, it is used a constant step-size defined as follows:
+\begin{equation}
+	\alpha_t = \gamma
+\end{equation}
+with $t$ indicating the current iteration. \\
 
+After this, the state of each agent is updated using the current state and the states of the in-neighbours. The new calculated state is then sent to all the out-neighbours. This is done with the following piece of code:
+\begin{lstlisting}
     # Update with my previous state
     u_i = np.multiply(XX[tt - 1], weight)
 
     # Send the state to neighbors
-    for node in adj.successors(rank):
+    for node in graph.successors(rank):
         world.send(XX[tt - 1], dest=node)
 
     # Update with state of all nodes before me
-    for node in adj.predecessors(rank):
+    for node in graph.predecessors(rank):
         u_i = u_i + world.recv(source=node) * weight
+\end{lstlisting}
 
-    # Go in the opposite direction with respect to the gradient
+The variable used here are:
+\begin{itemize}
+	\item  \textit{u\_i}: represents the current estimate of the state of the agents
+	\item \textit{world}: a variable used for communicating between nodes. It is made available by the MPI environment
+	\item \textit{graph}: a variable representing the communication graph. It is created using the functions in the \textit{networkx} library. It has two main functions that can be called: \textit{successors(node)} that returns a list with the out-neighbours of the agent \textit{node} and \textit{predecessors(node)} that returns the in-neighbours
+	\item \textit{rank}: represent the identifier of each agent. It is made available by the MPI environment and it is an integer number, that goes from $0$ to $number of agents - 1$
+\end{itemize}
+
+After this, the value of the gradient is calculated, using the function name passed as command line argument:
+\begin{lstlisting}
+    # Variable for storing the gradient value    
     gradient = 0
 
     if function_name == "softmax":
-        gradient = func.gradient_softmax(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
-
+        gradient = func.gradient_softmax(XX[tt - 1], category_n, dimensions, personal_dataset, normalized)
+	
     elif function_name == "quadratic":
         gradient = func.gradient_quadratic(XX[tt - 1], category_n, dimensions, personal_dataset, Q, r)
-
+	
     elif function_name == "exponential":
-        gradient = func.gradient_exponential(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
-
-     #print(gradient)
-
+        gradient = func.gradient_exponential(XX[tt - 1], category_n, dimensions, personal_dataset)
+	
+    # Multiply the gradient value by alpha
     grad = np.multiply(alpha, gradient)
+\end{lstlisting}
+In particular, a variable is firstly defined to store the value of the gradient that will be calculated. After computing it, the gradient is multiplied by the step-size and the result is stored into the \textit{grad} variable. \\
 
+After this phase, the state is updated using the gradient descent step:
+\begin{lstlisting}
     for i in range(0, dimensions[0]):
         u_i[i] = np.subtract(u_i[i], grad[i])
 
     # Store  my new state
     XX[tt] = u_i
+\end{lstlisting}
+Since the \textit{u\_i} and \textit{grad} variable are matrices, then each component of the gradient (multiplied by the step-size) is subtracted from the current estimate of the state. The result is then stored into an array \textit{XX}, which keeps in memory all the states at each iteration. \\
 
+Consequently, the loss value is calculated at each iteration using the right function. The value is then stored into an array that keeps in memory all the losses at each iteration:
+\begin{lstlisting}
     if function_name == "softmax":
-        losses[tt] = func.loss_softmax(XX[tt], category_n, personal_dataset, CONSTANT_TO_SUBTRACT)
+        losses[tt] = func.loss_softmax(XX[tt], category_n, personal_dataset)
 
     elif function_name == "quadratic":
         losses[tt] = func.loss_quadratic(XX[tt], category_n, dimensions, personal_dataset, Q, r)
 
     elif function_name == "exponential":
-        losses[tt] = func.loss_exponential(XX[tt - 1], category_n, dimensions, personal_dataset, CONSTANT_TO_SUBTRACT)
+        losses[tt] = func.loss_exponential(XX[tt - 1], category_n, dimensions, personal_dataset)
+\end{lstlisting}
 
+After this, the stop conditions are checked:
+\begin{lstlisting}
     # Checking epsilon reached condition
     if np.linalg.norm(np.subtract(XX[tt], XX[tt - 1])) < epsilon:
         buff = True
@@ -369,19 +389,29 @@ for tt in range(1, MAX_ITERATIONS - 1):
     if epsilon_reached:
         if rank == 0:
             print("Exiting at iteration ", tt, "/", MAX_ITERATIONS, "Condition on epsilon reached")
-            sys.stdout.flush()
-
         break
+\end{lstlisting}
 
+This is done in different steps:
+\begin{enumerate}
+	\item The following condition is checked:
+	\begin{equation}
+		\left\lVert \Theta_{t+1} - \Theta_{t} \right\rVert
+		\leq \epsilon
+	\end{equation}
+	If it is met, the variable \textit{buff} is set to true. 
+	\item The agent \textit{0} collects all the values of \textit{buff} of each agent in the \textit{buffer} variable.
+	\item Agent \textit{0} check if all the conditions in the \textit{buffer} variable are set to true. If they are, then the variable \textit{epsilon\_reached} is set to true.
+	\item This variable is sent to all the other agents using the \textit{bcast} function, that broadcast the value of the variable to all the nodes in the graph.
+	\item As last step, all the agents exit from the main cycle if all of them have met the stop condition. 
+\end{enumerate}
+
+The last things done in the main cycle are to print the iterations to the screen. This is done by the following piece of code:
+\begin{lstlisting}
     if tt in range(0, MAX_ITERATIONS, 100):
         if rank == 0:
             print("Iteration ", tt, "/", MAX_ITERATIONS)
-            sys.stdout.flush()
-    ITERATION_DONE = tt
 \end{lstlisting}
-
-When consensus is reached, the theta values are printed to user, then all data are sent to rank 0 for centralized
-calculations and plot result.
 
 
 
