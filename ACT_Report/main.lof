@@ -1,7 +1,8 @@
 \select@language {english}
 \addvspace {10\p@ }
+\contentsline {figure}{\numberline {1.1}{\ignorespaces Graph topology resulting from the \textit {-k 2} option.\relax }}{11}{figure.caption.9}
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {2.1}{\ignorespaces Communication graph used for the simulation.\relax }}{17}{figure.caption.9}
-\contentsline {figure}{\numberline {2.2}{\ignorespaces Value of the normalized cost function in a logarithmic scale over all the iterations. \relax }}{18}{figure.caption.10}
-\contentsline {figure}{\numberline {2.3}{\ignorespaces Value of the normalized cost function in a linear scale. \relax }}{19}{figure.caption.11}
-\contentsline {figure}{\numberline {2.4}{\ignorespaces Consensus on the third component of $\Theta _1$\relax }}{19}{figure.caption.12}
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Communication graph used for the simulation.\relax }}{17}{figure.caption.10}
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Value of the normalized cost function in a logarithmic scale over all the iterations. \relax }}{18}{figure.caption.11}
+\contentsline {figure}{\numberline {2.3}{\ignorespaces Value of the normalized cost function in a linear scale. \relax }}{19}{figure.caption.12}
+\contentsline {figure}{\numberline {2.4}{\ignorespaces Consensus on the third component of $\theta _1$\relax }}{19}{figure.caption.13}

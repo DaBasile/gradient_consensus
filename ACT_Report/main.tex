@@ -188,26 +188,23 @@ In this section it will be explained the Python implementation that solves the g
 \end{itemize}
 
 \subsection{Creation of the communication graph}
-The first thing done by the algorithm is to check if all the parameters are valid,
-then it starts to create the environment variable used by \textit{MPI}, the adjacency matrix and the local variables where data will be saved. The weights depend on how many in-neighbours each agent has. \\
-
-\textcolor{red}{
-The adjacency matrix is created by the \textit{createAdjM} function. It makes a communication graph using world\_d as number of
-mpi agents, n\_edges  (setted by default as 1), phi that is simply a phase inserted into
-graph which just shift the connection, by default is 0 (TODO: la parte di phi non mi convince). The first $for$
-cycle sets the number of agents that the system has, then edges are
-computed as follows:}
-\begin{itemize}
-    \item \textcolor{red}{The sum j + k + phi + 1 means the position of edge in the
-    	graph where item j is the current row, k is the count of agent 
-    	that the agent j will send a message, phi is the phase and just
-    	shift the agent that j will send a message and the "+1" }
-
-    \item \textcolor{red}{The instruction $ if \ e >= world\_d $  checks if the sum is over the number of
-    agents and if is true just subtracts this one}
-
-    \item \textcolor{red}{Instead $ if \ e \ $==$ \  j $ removes the hypothetical unnecessary self loop.}
-\end{itemize}
+The communication graph is created by the \textit{createAdjM} function. It creates a graph that is strongly connected and that has a cycle-like topology. In particular, from the command line is possible to pass a number (through the \textit{-k} option) to set the number of connection that each agent has. \\
+Suppose that the user set the option \textit{-k 2}, then the resulting graph will have a topology as in Fig. \ref{cycle_like_graph}. 
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.7]{figs/Graph_12_agents_k=2}
+	\caption{Graph topology resulting from the \textit{-k 2} option.}
+	\label{cycle_like_graph}
+\end{figure}
+\\
+It can be seen that each agent \textit{i} has as out-neighbours the agents \textit{i+1} and \textit{i+2} and as in-neighbours the agents \textit{i-1} and \textit{i-2}. \\This can be formalized as follows:
+\begin{equation}
+	\text{N}^{\text{OUT}}_{i} = \left\{i+1, i+2, \dots , i+k  \right\}
+\end{equation}
+\begin{equation}
+	\text{N}^{\text{IN}}_i = \left\{i-1, i-2, \dots, i-k  \right\}
+\end{equation}
+It's important to treat the numbers of the agents as if they were ordered with an agent following another one. This means that to the last agent $N$ follows the agent $0$.
 
 \subsection{Loss function calculation}
 The loss function (described in Eq. \ref{EQ1.7}) is implemented in the Python function called \textit{loss\_softmax}. It has three parameters:\\

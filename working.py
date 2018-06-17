@@ -106,6 +106,7 @@ if rank == 0:
     plt.draw()
     plt.show()
 
+exit()
 x0 = np.ones(dimensions)
 
 XX = np.zeros([MAX_ITERATIONS, *dimensions])
