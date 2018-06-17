@@ -212,7 +212,7 @@ computed as follows:}
 \subsection{Loss function calculation}
 The loss function (described in Eq. \ref{EQ1.7}) is implemented in the Python function called \textit{loss\_softmax}. It has three parameters:\\
 \begin{itemize}
-	\item \textit{all\_theta}: the matrix with the current estimation of $\Theta^*$
+	\item \textit{all\_theta}: the matrix with the current estimation of $\theta^*$
 	\item \textit{category\_count}: the number of categories in the dataset. In the IRIS dataset is $3$
 	\item \textit{personal\_dataset}: represents the dataset accessible to the considered agent
 \end{itemize}
@@ -222,7 +222,7 @@ The only addition to the function is the calculation of the \textit{const\_to\_s
 \end{equation}
 where $c$ represent the constant to subtract and it is calculated as
 \begin{equation}
-	c = max \left\{ \Theta^{1^\top}x, \dots,  \Theta^{K^\top}x \right\}
+	c = max \left\{ \theta^{1^\top}x, \dots,  \theta^{K^\top}x \right\}
 \end{equation}
 
 \begin{lstlisting}
@@ -249,7 +249,7 @@ This function could be omitted because it is not needed for solving the problem.
 \subsection{Gradient calculation}
 Given the nature of the method used to solve the problem, this is the most important piece of software. The gradient of the cost function has been calculated to be:
 \begin{equation}
-	\nabla_{\Theta^{(k)}}J(\Theta) = - \sum_{i=1}^{m} \left[ x^{(i)} \left( 1 \left\{ y^{(i)}=k \right\} -     \dfrac{exp\left(\Theta^{(k)^{\top}}x^{(i)} \right)}{ \sum_{j=1}^{K} exp\left(\Theta^{(j)^{\top}}x^{(i)} \right)}      \right) \right]
+	\nabla_{\theta^{(k)}}J(\theta) = - \sum_{i=1}^{m} \left[ x^{(i)} \left( 1 \left\{ y^{(i)}=k \right\} -     \dfrac{exp\left(\theta^{(k)^{\top}}x^{(i)} \right)}{ \sum_{j=1}^{K} exp\left(\theta^{(j)^{\top}}x^{(i)} \right)}      \right) \right]
 	\label{gradient_softmax}
 \end{equation}
 
@@ -396,7 +396,7 @@ This is done in different steps:
 \begin{enumerate}
 	\item The following condition is checked:
 	\begin{equation}
-		\left\lVert \Theta_{t+1} - \Theta_{t} \right\rVert
+		\left\lVert \theta_{t+1} - \theta_{t} \right\rVert
 		\leq \epsilon
 	\end{equation}
 	If it is met, the variable \textit{buff} is set to true. 
@@ -458,7 +458,7 @@ The iterations run are 15000, sufficient enough to see the function approaching 
 	\label{log_cost}
 \end{figure}
 
-The value of the cost function is shown in figure \ref{lin_cost} in a linear scale too, so it can be seen how the algorithm approaches the minimum value $\Theta^{*}$ in order to have the minimum of the problem \ref{EQ1.7}.
+The value of the cost function is shown in figure \ref{lin_cost} in a linear scale too, so it can be seen how the algorithm approaches the minimum value $\theta^{*}$ in order to have the minimum of the problem \ref{EQ1.7}.
 
 \begin{figure}[ht]
 	\centering
@@ -485,7 +485,7 @@ To better see the consensus, in this simulation the initial condition have been 
 		\caption{Detail for the first 140 iterations}
 		\label{avg_consensus:detail}
 	\end{subfigure}
-	\caption{Consensus on the third component of $\Theta_1$}
+	\caption{Consensus on the third component of $\theta_1$}
 	\label{avg_consensus}
 \end{figure}
 
