@@ -52,7 +52,7 @@
 {\Huge \textbf{Abstract}}\\
 \vspace{15mm}
 \end{center}
-In this report, it will be shown how to solve a Multinomial Logistic Regression problem (also known as \textit{Softmax Regression}) using a distributed approach. The sub-gradient method has been used to distribute calculations among a configurable number of agents. A portion of the dataset is given to each agent and used to minimize a cost function related to the portion of the dataset in its possession.
+In this report, it will be shown how to solve a \textit{Multinomial Logistic Regression} problem (also known as \textit{Softmax Regression}) using a distributed approach. The \textit{Sub-gradient Method} has been used to distribute calculations among a configurable number of agents. A portion of the dataset is given to each agent and used to minimize a cost function related to the portion of the dataset in its possession.
 The script solving the problem has been written using \textit{Python 3}. The most important library used is \textit{MPI4py} which provides implementation of the \textit{MPI} environment. \textit{MPI} is a communication protocol between nodes that executes the same program in parallel \cite{CITATION:4}. The results found with the distributed approach have been compared with the results obtained through a \textit{MATLAB} script, which executes all the operation using a centralized architecture (meaning that all operations are executed by a single agent).\\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -65,14 +65,14 @@ The script solving the problem has been written using \textit{Python 3}. The mos
 \addcontentsline{toc}{chapter}{Introduction}
 
 \section*{Motivations}
-In the past there was a single \textit{Mainframe} that executed all digital computations. Years after, with the creation of the Personal Computer, more people could execute the same operations in private. Today's \textit{Micro controllers} allow to make smart all kind of devices. More algorithms have been created to connect these devices to distribute computations and tasks.\\
+In the past there was a single \textit{Mainframe} that executed all digital computations. Years after, with the creation of the \textit{Personal Computer}, more people could execute the same operations in private. Today's \textit{Micro controllers} allow to make smart all kind of devices. More algorithms have been created to connect these devices to distribute computations and tasks.\\
  In general, this approach is useful because it allows cooperation between agents and permits to reach a common goal. In this case, the ability to split the workload into several agents guarantees faster execution times.\\
-The Multinomial Logistic Regression for a multi-class classification problem, will be solved using a distributed approach in a faster way with respect to the same solution using a centralized method.
+The \textit{Multinomial Logistic Regression} for a multi-class classification problem, will be solved using a distributed approach in a faster way with respect to the same solution using a centralized method.
 
 \section*{Contributions}
 This work implements a scenario in which there are some agents that estimate a cost function using their own information and those of other agents; they use a \textit{Distributed Sub-gradient Method} to update their own estimates and, in particular, they solve a \textit{Multinomial Logistic Regression} problem.\\
 
-The first step was to create a MATLAB script that solves a quadratic optimization problem using a gradient method. In this script it has been \textit{simulated} a distributed approach in order to test the effectiveness of the method saw in Distributed Sub-gradient Methods for Multi-Agent Optimization \cite{CITATION:1}. MATLAB was only used in the prototype phase, because it doesn't allow real parallel computations. After the confirmation that the approach was working, the implementation of the algorithm in Python 3 using the Message Passing Interface was started.\\
+The first step was to create a \textit{MATLAB} script that solves a quadratic optimization problem using a gradient method. In this script it has been \textit{simulated} a distributed approach in order to test the effectiveness of the method saw in \textit{Distributed Sub-gradient Methods} for Multi-Agent Optimization \cite{CITATION:1}. \textit{MATLAB} was only used in the prototype phase, because it doesn't allow real parallel computations. After the confirmation that the approach was working, the implementation of the algorithm in \textit{Python 3} using the \textit{Message Passing Interface} was started.\\
 The quadratic form used was 
 \begin{equation} \tag{I}
 \dfrac{1}{2}x^{\top}Qx + r^{\top}x
@@ -81,13 +81,12 @@ using
 \begin{equation} \tag{II}
 	Qx + r
 \end{equation}
-as gradient. \\
-This form was used only to test the convergence of the method and it was used as base to build the distributed script on it.\\
-After having proved the convergence, considering that the Supervised Learning problem known as Multinomial Logistic Regression gives as output a probability value for every considered class, it was necessary to implement the Softmax function. 
+as gradient. This form was used only to test the convergence of the method and it was used as base to build the distributed script on it.\\
+After having proved the convergence, considering that the \textit{Supervised Learning} problem known as \textit{Multinomial Logistic Regression} gives as output a probability value for every considered class, it was necessary to implement the \textit{Softmax function}. 
 \begin{equation} \tag{III}
 g_i\left(\theta\right):=\sum_{k=1}^{K}{1\{y^{(i)}=e_k\}\log{\left( \frac{exp(\theta^{(k)^\top}x^{(i)})}{\sum_{k=1}^{K}{exp( \theta^{(j)^\top}x )}} \right)}}
-\end{equation} \cite{CITATION:3}. \\
-This formula, which will be explained in Chapter \ref{Subsec1.1.2}, has been minimized in a centralized set-up using a MATLAB script, and the result has been compared to the one of the Python distributed script.\\
+\end{equation} \\
+\cite{CITATION:3}. This formula, which will be explained in Chapter \ref{Subsec1.1.2}, has been minimized in a centralized set-up using a \textit{MATLAB} script, and the result has been compared to the one of the \textit{Python} distributed script.\\
 At the end, several tests has been executed to find the optimal values for the step-size.\\
 
 % \section*{Organization}
@@ -168,10 +167,10 @@ with \textbf{1\{$\cdot$\}} being the \textit{indicator function} and $e_k$ being
 \State \textbf{Start:}
 \State Fix initial conditions for each node $i$ as $\theta_i(0) = [0 \quad ... \quad 0]^T$
 \State Define the Adjacency Matrix and Weights Matrix
-\While{No stop rule is true, each node $i$ does:} 
+\While{No stop rule is true, each node $i$} 
 	\State Calculate $\alpha^i(k)$ using a diminishing step-size rule
     \State Calculate $\nabla f_i$
-    \For {each neighbour j}
+    \For {each neighbour $j$}
         \State $\theta_i(k+1) = \theta_i(k+1) + a^i_j(k) \theta_j(k)$
     \EndFor
     \State Update: $\theta_i(k+1) = \theta_i(k+1) - \alpha^i(k) \nabla f_i$
@@ -188,8 +187,8 @@ with \textbf{1\{$\cdot$\}} being the \textit{indicator function} and $e_k$ being
 In this section it will be explained the Python implementation that solves the given problem. The solution has been implemented using the following libraries:
 \begin{itemize}
 	\item  \textit{numpy} which computes all vector and matrix operations such as transposition, product, division,
-	summation
-	\item \textit{networkx} which creates and manages the adjacency matrices for all the agents
+	summation;
+	\item \textit{networkx} which creates and manages the adjacency matrices for all the agents;
 	\item \textit{matplotlib} that plots the results
 	of the tests and the communication graph.
 \end{itemize}
@@ -216,9 +215,9 @@ It's important to treat the numbers of the agents as if they were ordered with a
 \subsection{Loss function calculation}
 The loss function (described in Eq. \ref{EQ1.7}) is implemented in the Python function called \textit{loss\_softmax}. It has three parameters:\\
 \begin{itemize}
-	\item \textit{all\_theta}: the matrix with the current estimation of $\theta^*$
-	\item \textit{category\_count}: the number of categories in the dataset. In the IRIS dataset, this number is $3$
-	\item \textit{personal\_dataset}: represents the dataset accessible to the considered agent
+	\item \textit{all\_theta}: the matrix with the current estimation of $\theta^*$;
+	\item \textit{category\_count}: the number of categories in the dataset. In the IRIS dataset, this number is $3$;
+	\item \textit{personal\_dataset}: represents the dataset accessible to the considered agent.
 \end{itemize}
 The only addition to the function is the calculation of the \textit{const\_to\_subtract}, a constant used to prevent the overflow. The property used to justify the use of this method is the following:
 \begin{equation}
@@ -325,13 +324,13 @@ After this, the state of each agent is updated using the current state and the s
 
 The variables used here are:
 \begin{itemize}
-	\item  \textit{u\_i}: represents the current estimate of the state of the agents
-	\item \textit{world}: a variable used for communicating between nodes. It is made available by the MPI environment. It makes possible to the nodes to communicate between them, using functions like \textit{send} or \textit{recv}
-	\item \textit{graph}: a variable representing the communication graph. It is created using the functions in the \textit{networkx} library. It has two main functions that can be called: \textit{successors(node)} that returns a list with the out-neighbours of the agent \textit{node} and \textit{predecessors(node)} that returns the in-neighbours
-	\item \textit{rank}: represents the identifier of each agent. It is made available by the MPI environment and it is an integer number, that goes from $0$ to \textit{number of agents - 1}
+	\item  \textit{u\_i}: represents the current estimate of the state of the agents;
+	\item \textit{world}: a variable used for communicating between nodes. It is made available by the MPI environment. It makes possible to the nodes to communicate between them, using functions like \textit{send} or \textit{recv};
+	\item \textit{graph}: a variable representing the communication graph. It is created using the functions in the \textit{networkx} library. It has two main functions that can be called: \textit{successors(node)} that returns a list with the out-neighbours of the agent \textit{node} and \textit{predecessors(node)} that returns the in-neighbours;
+	\item \textit{rank}: represents the identifier of each agent. It is made available by the MPI environment and it is an integer number, that goes from $0$ to \textit{number of agents - 1}.
 \end{itemize}
 
-After this, the value of the gradient is calculated, using the function name passed as command line argument:
+Later, the value of the gradient is calculated, using the function name passed as command line argument:
 \begin{lstlisting}
     # Variable for storing the gradient value    
     gradient = 0
@@ -372,7 +371,7 @@ Consequently, the loss value is calculated at each iteration using the same func
         losses[tt] = func.loss_exponential(XX[tt - 1], category_n, dimensions, personal_dataset)
 \end{lstlisting}
 
-After this, the stop conditions are checked:
+After this, the stop conditions are checked: \\
 \begin{lstlisting}
     # Checking epsilon reached condition
     if np.linalg.norm(np.subtract(XX[tt], XX[tt - 1])) < epsilon:
@@ -401,7 +400,7 @@ This is done in different steps:
 	\item The following condition is firstly checked:
 	\begin{equation}
 		\left\lVert \theta_{t+1} - \theta_{t} \right\rVert
-		\leq \epsilon
+		\leq \varepsilon
 	\end{equation}
 	If it is met, the variable \textit{buff} is set to \textit{true}. 
 	\item The agent \textit{0} collects all the values of \textit{buff} of each agent in the \textit{buffer} variable.
@@ -504,7 +503,7 @@ There are some key factors that influence \textit{the computational time}, \text
 The Python program, thanks to the MPI platform, is capable of running on an arbitrary number of nodes. It was tested on as little as 2 nodes to as many as 60 nodes, which means that every node was processing the data of 2 instances (120 instances divided into 60 nodes). The best performances are obtained when the number of nodes corresponds to the number of physical cores of the machine where it runs. When the number of nodes exceeds greatly the number of physical cores, the resources are oversubscribed. In this case, the performances degrade notably as the nodes compete for cache and memory and the processors' schedulers are put in a difficult situation. On a 4-core test machine, a computation with 5000 iterations and 30 nodes is done in 5 minutes. The same machine can do the same number of iterations, but with 60 nodes, in 15 minutes. Therefore, to show the scalability of the software,  the following tests will be shown on a 4 nodes set-up and a 17 nodes setup (the same of Fig. \ref{graph_17_agents}) . \\
 
 \subsection{Epsilon} \label{Subsec2.2.2}
-This is a small constant used as stop condition. If the norm of the result of the current calculation differs less than $\epsilon$ (chosen arbitrary small) from the previous, the algorithm is stopped. This is used as convergence stop condition. In fact, given the nature of the method used to minimize the cost function, the converge to the optimal value can be reached in a huge amount of time. To prevent this from happening, it has been used this condition.
+This is a small constant used as stop condition. If the norm of the result of the current calculation differs less than $\varepsilon$ (chosen arbitrary small) from the previous, the algorithm is stopped. This is used as convergence stop condition. In fact, given the nature of the method used to minimize the cost function, the converge to the optimal value can be reached in a huge amount of time. To prevent this from happening, it has been used this condition.
 
 \subsection{Learning rate} \label{Subsec2.2.3}
 The step-size plays a big role in the speed of convergence of the algorithm. There are 3 kinds of step-size:
@@ -655,7 +654,7 @@ Values of $\psi=0.5$, $\gamma=0.5$ gives only $1$ error in less than half of the
 %%%%% SVILUPPI FUTURI %%%%%%
 \chapter*{Conclusions} % and future developments}
 \addcontentsline{toc}{chapter}{Conclusions} %  and future developments}
-In this work it has been resolved a Multinomial Logistic Regression problem using MPI in Python. Each agent use a Distributed Sub-gradient method to update its own estimate of the optimal solution. At the end of the iterations, all the agents converge to the same solution.
+In this work it has been resolved a \textit{Multinomial Logistic Regression} problem using \textit{MPI} in \textit{Python}. Each agent use a \textit{Distributed Sub-gradient Method} to update its own estimate of the optimal solution. At the end of the iterations, all the agents converge to the same solution.
 %% Tutte le considerazioni finali sintetiche si fanno in base alla tabella dei risultati del capitolo 2.
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 
